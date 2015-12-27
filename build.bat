@@ -33,7 +33,7 @@ if exist *.map del *.map
 if exist *.obj del *.obj
 if exist *.pdb del *.pdb > NUL 2> NUL
 
-tasklist /fi "imagename eq %ExecutableName%" |find /I "%ExecutableName%" || cl %CommonCompilerFlags% -Fe%ExecutableName%.exe %ExecutableSourceFiles% /link /INCREMENTAL:NO
+tasklist /fi "imagename eq %ExecutableName%.exe" |find /I "%ExecutableName%.exe" || cl %CommonCompilerFlags% -Fe%ExecutableName%.exe %ExecutableSourceFiles% /link /INCREMENTAL:NO
 echo ________________________________________________________________________
 cl %CommonCompilerFlags% /LDd /Fm%DllName%.map /Fe%DllName%.dll %DllSourceFiles% /link /PDB:%DllName%_%random%.pdb %CommonLinkerFlags% %DllExportFunctions%
 
