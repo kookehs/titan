@@ -7,11 +7,19 @@
 
 #include "titan/core/titan.hpp"
 
-void game_func(const HMODULE);
-void game_load(const char *, struct game_api *);
-void game_load_library(const HMODULE, struct game_api *);
-void game_unload(struct game_api *);
-void main_loop(void);
+struct game {
+        HMODULE handle;
+        FILETIME last_write_time;
+        struct game_api api;
+        struct game_state *state;
+};
+
+struct game *game_create(const char *);
+void game_destroy(struct game *);
+void game_load(const char *, struct game *);
+void game_load_library(struct game *);
+void game_unload(struct game *);
+void main_loop(const char *, struct game *);
 FILETIME last_write_time(const char *);
 
 #endif  /* TITAN_CORE_ROOT_H_ */

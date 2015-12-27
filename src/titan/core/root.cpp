@@ -2,48 +2,57 @@
 
 #include "titan/core/root.hpp"
 
-int main() {
-        main_loop();
+#include <stdlib.h>
+
+int
+main() {
+        const char *dll_path = "titan.dll";
+        struct game *game = game_create(dll_path);
+        main_loop(dll_path, game);
+        game_destroy(game);
 
         return 0;
 }
 
+inline struct game *
+game_create(const char *dll_path) {
+        struct game *game = (struct game *)malloc(sizeof(*game));
+        game->state = (struct game_state *)malloc(sizeof(*game->state));
+        game_load(dll_path, game);
+        game->api.init(game->state);
+
+        return game;
+}
+
 inline void
-game_destroy(struct game_api *game) {
+game_destroy(struct game *game) {
         game_unload(game);
+        free(game->state);
         free(game);
 }
 
-inline FARPROC
-game_func(const HMODULE handle, const char* name) {
-    return GetProcAddress(handle, name);
-}
-
-void
-game_load(const char *dll_path, struct game_api *game) {
+inline void
+game_load(const char *dll_path, struct game *game) {
         const char* dll_temp_path = "titan_temp.dll";
         CopyFile(dll_path, dll_temp_path, false);
         game->handle = LoadLibrary(dll_temp_path);
 
         if (game->handle) {
                 game->last_write_time = last_write_time(dll_path);
-                game_load_library(game->handle, game);
+                game_load_library(game);
         }
 }
 
 inline void
-game_load_library(const HMODULE handle, struct game_api *game) {
-        game->game_init = (game_init_ptr)game_func(handle, "game_init");
-        game->game_update = (game_update_ptr)game_func(handle, "game_update");
+game_load_library(struct game *game) {
+        game->api = *(struct game_api *)GetProcAddress(game->handle, "api");
 }
 
-void
-game_unload(struct game_api *game) {
+inline void
+game_unload(struct game *game) {
         if (game->handle) {
                 FreeLibrary(game->handle);
                 game->handle = nullptr;
-                game->game_init = nullptr;
-                game->game_update = nullptr;
         }
 }
 
@@ -59,13 +68,8 @@ last_write_time(const char *dll_path) {
 }
 
 void
-main_loop(void) {
-        const char *dll_path = "titan.dll";
-        struct game_api *game = (struct game_api *)malloc(sizeof(*game));
-        game_load(dll_path, game);
-        game->state = game->game_init();
-
-        while (game->game_update(game->state) == false) {
+main_loop(const char *dll_path, struct game *game) {
+        while (game->api.loop(game->state) == false) {
                 FILETIME write_time = last_write_time(dll_path);
 
                 if (CompareFileTime(&write_time, &game->last_write_time) != 0) {
@@ -73,6 +77,4 @@ main_loop(void) {
                         game_load(dll_path, game);
                 }
         }
-
-        game_destroy(game);
 }

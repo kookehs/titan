@@ -6,5 +6,5 @@ set RootDirectory=%RootDirectory:\=/%
 if not exist "%RootDirectory%/logs/" mkdir "%RootDirectory%/logs/"
 
 pushd "%RootDirectory%bin/"
-drmemory.exe -brief -logdir %RootDirectory%/logs/ -- titan.exe
+drmemory.exe -brief -logdir %RootDirectory%/logs/ -- win32_titan.exe
 popd
