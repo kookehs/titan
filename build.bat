@@ -4,7 +4,7 @@ set RootDirectory=%~dp0
 set RootDirectory=%RootDirectory:\=/%
 
 set DllName=titan
-set DllSourceFiles=titan.cpp
+set DllSourceFiles=titan.cpp hashmap.cpp misc.cpp
 set DllExportFunctions=/EXPORT:api
 
 set ExecutableName=win32_titan
@@ -16,6 +16,10 @@ set CommonLinkerFlags=/DEBUG /INCREMENTAL:NO /LIBPATH:%RootDirectory%lib/ csfml-
 if not exist "%RootDirectory%bin/" mkdir "%RootDirectory%bin/"
 
 pushd "%RootDirectory%src/titan/core/"
+copy * "%RootDirectory%bin/"
+popd
+
+pushd "%RootDirectory%src/titan/utility/"
 copy * "%RootDirectory%bin/"
 popd
 
@@ -33,9 +37,9 @@ if exist *.map del *.map
 if exist *.obj del *.obj
 if exist *.pdb del *.pdb > NUL 2> NUL
 
-tasklist /fi "imagename eq %ExecutableName%.exe" |find /I "%ExecutableName%.exe" || cl %CommonCompilerFlags% -Fe%ExecutableName%.exe %ExecutableSourceFiles% /link /INCREMENTAL:NO
-echo ________________________________________________________________________
 cl %CommonCompilerFlags% /LDd /Fm%DllName%.map /Fe%DllName%.dll %DllSourceFiles% /link /PDB:%DllName%_%random%.pdb %CommonLinkerFlags% %DllExportFunctions%
+echo ________________________________________________________________________
+tasklist /fi "imagename eq %ExecutableName%.exe" |find /I "%ExecutableName%.exe" || cl %CommonCompilerFlags% -Fe%ExecutableName%.exe %ExecutableSourceFiles% /link /INCREMENTAL:NO
 
 if exist *.cpp del *.cpp
 popd
