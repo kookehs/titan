@@ -18,7 +18,7 @@ struct game {
         HMODULE handle;
         FILETIME last_write_time;
         struct game_api api;
-        struct game_state *state;
+        struct game_state state;
 };
 
 void game_create(char *, struct game *);

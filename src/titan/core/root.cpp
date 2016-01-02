@@ -29,15 +29,12 @@ main() {
 inline void
 game_create(char *dll_path, struct game *game) {
         game_load(dll_path, game);
-        game->state = (struct game_state *)malloc(sizeof(*game->state));
-        game->api.init(game->state);
+        game->api.init(&game->state);
 }
 
 inline void
 game_destroy(struct game *game) {
         game_unload(game);
-        free(game->state);
-        game->state = nullptr;
 }
 
 inline void
@@ -78,7 +75,7 @@ last_write_time(char *dll_path) {
 
 void
 main_loop(char *dll_path, struct game *game) {
-        while (game->api.loop(game->state) == false) {
+        while (game->api.loop(&game->state) == 0) {
                 FILETIME write_time = last_write_time(dll_path);
 
                 if (CompareFileTime(&write_time, &game->last_write_time) != 0) {

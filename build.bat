@@ -4,7 +4,7 @@ set RootDirectory=%~dp0
 set RootDirectory=%RootDirectory:\=/%
 
 set DllName=titan
-set DllSourceFiles=titan.cpp hashmap.cpp misc.cpp
+set DllSourceFiles=character.cpp hashmap.cpp misc.cpp titan.cpp
 set DllExportFunctions=/EXPORT:api
 
 set ExecutableName=win32_titan

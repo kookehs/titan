@@ -25,6 +25,7 @@ game_state_destroy(struct game_state *state) {
         state->shape = nullptr;
         sfRenderWindow_destroy(state->window);
         state->window = nullptr;
+        character_destroy(&state->character);
 }
 
 inline void
@@ -32,11 +33,22 @@ game_draw_circle(sfCircleShape *shape, sfRenderWindow *window) {
         sfRenderWindow_drawCircleShape(window, shape, nullptr);
 }
 
-void
-game_init(struct game_state *state) {
-        struct hashmap *map = hashmap_create(5);
-        game_load_config("../data/common.cfg", map);
+inline void
+game_draw_sprite(sfSprite *sprite, sfRenderWindow *window) {
+        sfRenderWindow_drawSprite(window, sprite, nullptr);
+}
 
+int
+game_init(struct game_state *state) {
+        if (state == nullptr)
+                return 0;
+
+        struct hashmap *map = hashmap_create(5);
+
+        if (map == nullptr)
+                return 0;
+
+        game_load_config("../data/common.cfg", map);
         char buffer[UCHAR_MAX];
         hashmap_at(map, "WindowHeight", sizeof(buffer), buffer);
         uint32_t height = strtol(buffer, nullptr, 10);
@@ -54,9 +66,13 @@ game_init(struct game_state *state) {
         state->clock = sfClock_create();
         state->update_time = sfTime_Zero;
         state->frame_time = (1.0f / frame_rate) * 1000000;
+
+        character_create("../data/textures/character.png", &state->character);
+
         state->shape = sfCircleShape_create();
         sfCircleShape_setRadius(state->shape, 100.0f);
         sfCircleShape_setFillColor(state->shape, sfGreen);
+        return 1;
 }
 
 int
@@ -99,10 +115,16 @@ game_loop(struct game_state *state) {
                 while (state->update_time.microseconds > state->frame_time) {
                         state->update_time.microseconds -= state->frame_time;
                         error_code = game_process(state);
+
+                        if (error_code)
+                                return error_code;
+
+                        game_update(state);
                 }
 
                 game_window_clear(sfBlack, state->window);
-                game_draw_circle(state->shape, state->window);
+                // game_draw_circle(state->shape, state->window);
+                game_draw_sprite(state->character.sprite, state->window);
                 game_window_display(state->window);
         }
 
@@ -116,7 +138,7 @@ int
 game_process(struct game_state *state) {
         sfEvent event;
 
-        // TODO(bill): The following line occasionally causes a crash.
+        // NOTE(bill): The following line occasionally causes a crash.
         while (sfRenderWindow_pollEvent(state->window, &event)) {
                 if (event.type == sfEvtClosed) {
                         sfRenderWindow_close(state->window);
@@ -125,11 +147,21 @@ game_process(struct game_state *state) {
                         if (event.key.code == sfKeyEscape) {
                                 sfRenderWindow_close(state->window);
                                 return 1;
+                        } else {
+                                float delta = state->frame_time / 1000000.0f;
+                                sfKeyCode key = event.key.code;
+                                struct character *character = &state->character;
+                                character_process(delta, key, character);
                         }
                 }
         }
 
         return 0;
+}
+
+inline void
+game_update(struct game_state *state) {
+        character_update(&state->character);
 }
 
 inline void
