@@ -21,16 +21,9 @@
 
 inline void
 game_state_destroy(struct game_state *state) {
-        sfCircleShape_destroy(state->shape);
-        state->shape = nullptr;
         sfRenderWindow_destroy(state->window);
         state->window = nullptr;
         character_destroy(&state->character);
-}
-
-inline void
-game_draw_circle(sfCircleShape *shape, sfRenderWindow *window) {
-        sfRenderWindow_drawCircleShape(window, shape, nullptr);
 }
 
 inline void
@@ -68,10 +61,6 @@ game_init(struct game_state *state) {
         state->frame_time = (1.0f / frame_rate) * 1000000;
 
         character_create("../data/textures/character.png", &state->character);
-
-        state->shape = sfCircleShape_create();
-        sfCircleShape_setRadius(state->shape, 100.0f);
-        sfCircleShape_setFillColor(state->shape, sfGreen);
         return 1;
 }
 
@@ -123,7 +112,6 @@ game_loop(struct game_state *state) {
                 }
 
                 game_window_clear(sfBlack, state->window);
-                // game_draw_circle(state->shape, state->window);
                 game_draw_sprite(state->character.sprite, state->window);
                 game_window_display(state->window);
         }
@@ -138,7 +126,8 @@ int
 game_process(struct game_state *state) {
         sfEvent event;
 
-        // NOTE(bill): The following line occasionally causes a crash.
+        // TODO(bill): Figure out why the following line causes a crash
+        //             Could it be because of varying CRT lbrary?
         while (sfRenderWindow_pollEvent(state->window, &event)) {
                 if (event.type == sfEvtClosed) {
                         sfRenderWindow_close(state->window);

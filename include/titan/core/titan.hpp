@@ -30,14 +30,12 @@ struct game_state {
         sfClock *clock = nullptr;
         sfTime update_time = {};
         sfInt64 frame_time = 0.0f;
-        sfCircleShape *shape = nullptr;
         sfRenderWindow *window = nullptr;
 };
 
 extern "C" const struct game_api api;
 
 void game_state_destroy(struct game_state *);
-void game_draw_cricle(sfCircleShape *, sfRenderWindow *);
 void game_draw_sprite(sfSprite *, sfRenderWindow *);
 int game_init(struct game_state *);
 int game_load_config(char *path, struct hashmap *);
