@@ -9,10 +9,14 @@
 
 #include "titan/core/character.hpp"
 
+#include "SFML/Window/Keyboard.h"
+
 int
 character_create(char *path, struct character *character) {
         character->x = 100.0f;
         character->y = 100.0f;
+        character->dx = 0.0f;
+        character->dy = 0.0f;
         character->texture = sfTexture_createFromFile(path, nullptr);
 
         if (character->texture == nullptr)
@@ -35,24 +39,32 @@ character_destroy(struct character *character) {
 }
 
 inline void
-character_move(float dx, float dy, struct character *character) {
+character_move(float delta, struct character *character) {
+        float dx = character->dx;
+        float dy = character->dy;
         character->x += dx;
         character->y += dy;
-        sfSprite_move(character->sprite, {dx, dy});
+        sfSprite_move(character->sprite, {dx * delta, dy * delta});
+        character->dx = 0.0f;
+        character->dy = 0.0f;
 }
 
 void
-character_process(float delta, sfKeyCode key, struct character *character) {
-        if (key == sfKeyW) {
-                character_move(0.0f, -50.0f * delta, character);
-        } else if (key == sfKeyS) {
-                character_move(0.0f, 50.0f * delta, character);
-        } else if (key == sfKeyA) {
-                character_move(-50.0f * delta, 0.0f, character);
-        } else if (key == sfKeyD) {
-                character_move(50.0f * delta, 0.0f, character);
-        }
+character_process(struct character *character) {
+        if (sfKeyboard_isKeyPressed(sfKeyW))
+                character->dy += -50.0f;
+
+        if (sfKeyboard_isKeyPressed(sfKeyS))
+                character->dy += 50.0f;
+
+        if (sfKeyboard_isKeyPressed(sfKeyA))
+                character->dx += -50.0f;
+
+        if (sfKeyboard_isKeyPressed(sfKeyD))
+                character->dx += 50.0f;
 }
 
 void
-character_update(struct character *character) {}
+character_update(float delta, struct character *character) {
+        character_move(delta, character);
+}

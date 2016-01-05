@@ -58,7 +58,8 @@ game_init(struct game_state *state) {
         state->window = sfRenderWindow_create(mode, title, sfClose, nullptr);
         state->clock = sfClock_create();
         state->update_time = sfTime_Zero;
-        state->frame_time = (1.0f / frame_rate) * 1000000;
+        state->delta = 1.0f / frame_rate;
+        state->frame_time = state->delta * 1000000;
 
         character_create("../data/textures/character.png", &state->character);
         return 1;
@@ -136,21 +137,18 @@ game_process(struct game_state *state) {
                         if (event.key.code == sfKeyEscape) {
                                 sfRenderWindow_close(state->window);
                                 return 1;
-                        } else {
-                                float delta = state->frame_time / 1000000.0f;
-                                sfKeyCode key = event.key.code;
-                                struct character *character = &state->character;
-                                character_process(delta, key, character);
                         }
                 }
         }
+
+        character_process(&state->character);
 
         return 0;
 }
 
 inline void
 game_update(struct game_state *state) {
-        character_update(&state->character);
+        character_update(state->delta, &state->character);
 }
 
 inline void

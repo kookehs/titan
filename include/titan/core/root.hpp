@@ -7,8 +7,8 @@
 // You should have received a copy of the CC0 legalcode along with this
 // work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-#ifndef TITAN_CORE_ROOT_H_
-#define TITAN_CORE_ROOT_H_
+#ifndef TITAN_CORE_ROOT_HPP_
+#define TITAN_CORE_ROOT_HPP_
 
 #include <windows.h>
 
@@ -29,4 +29,4 @@ void game_unload(struct game *);
 void main_loop(char *, struct game *);
 FILETIME last_write_time(char *);
 
-#endif  /* TITAN_CORE_ROOT_H_ */
+#endif  /* TITAN_CORE_ROOT_HPP_ */

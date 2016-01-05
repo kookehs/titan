@@ -28,8 +28,9 @@ struct game_api {
 struct game_state {
         struct character character;
         sfClock *clock = nullptr;
-        sfTime update_time = {};
+        float delta = 0.0f;
         sfInt64 frame_time = 0.0f;
+        sfTime update_time = {};
         sfRenderWindow *window = nullptr;
 };
 
