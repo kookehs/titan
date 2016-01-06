@@ -17,7 +17,10 @@ character_create(char *path, struct character *character) {
         character->y = 100.0f;
         character->dx = 0.0f;
         character->dy = 0.0f;
+        character->speed = 50.0f;
         character->texture = sfTexture_createFromFile(path, nullptr);
+        character->width = sfTexture_getSize(character->texture).x;
+        character->height = sfTexture_getSize(character->texture).y;
 
         if (character->texture == nullptr)
                 return 0;
@@ -40,11 +43,11 @@ character_destroy(struct character *character) {
 
 inline void
 character_move(float delta, struct character *character) {
-        float dx = character->dx;
-        float dy = character->dy;
+        float dx = character->dx * delta;
+        float dy = character->dy * delta;
         character->x += dx;
         character->y += dy;
-        sfSprite_move(character->sprite, {dx * delta, dy * delta});
+        sfSprite_move(character->sprite, {dx, dy});
         character->dx = 0.0f;
         character->dy = 0.0f;
 }
@@ -52,16 +55,16 @@ character_move(float delta, struct character *character) {
 void
 character_process(struct character *character) {
         if (sfKeyboard_isKeyPressed(sfKeyW))
-                character->dy += -50.0f;
+                character->dy += -character->speed;
 
         if (sfKeyboard_isKeyPressed(sfKeyS))
-                character->dy += 50.0f;
+                character->dy += character->speed;
 
         if (sfKeyboard_isKeyPressed(sfKeyA))
-                character->dx += -50.0f;
+                character->dx += -character->speed;
 
         if (sfKeyboard_isKeyPressed(sfKeyD))
-                character->dx += 50.0f;
+                character->dx += character->speed;
 }
 
 void

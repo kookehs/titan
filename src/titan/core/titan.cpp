@@ -18,12 +18,14 @@
 #include "SFML/Window/Event.h"
 
 #include "titan/utility/misc.hpp"
+#include "titan/utility/physics.hpp"
 
 inline void
-game_state_destroy(struct game_state *state) {
+game_destroy(struct game_state *state) {
         sfRenderWindow_destroy(state->window);
         state->window = nullptr;
         character_destroy(&state->character);
+        enemy_destroy(&state->enemy);
 }
 
 inline void
@@ -43,6 +45,9 @@ game_init(struct game_state *state) {
 
         game_load_config("../data/common.cfg", map);
         char buffer[UCHAR_MAX];
+        hashmap_at(map, "WindowTitle", sizeof(buffer), buffer);
+        char title[UCHAR_MAX];
+        strncpy(title, buffer, sizeof(title));
         hashmap_at(map, "WindowHeight", sizeof(buffer), buffer);
         uint32_t height = strtol(buffer, nullptr, 10);
         hashmap_at(map, "WindowWidth", sizeof(buffer), buffer);
@@ -53,8 +58,7 @@ game_init(struct game_state *state) {
         uint32_t frame_rate = strtol(buffer, nullptr, 10);
         hashmap_destroy(map);
 
-        sfVideoMode mode = { width, height, bit_depth };
-        char *title = "SFML works!";
+        sfVideoMode mode = {width, height, bit_depth};
         state->window = sfRenderWindow_create(mode, title, sfClose, nullptr);
         state->clock = sfClock_create();
         state->update_time = sfTime_Zero;
@@ -62,6 +66,7 @@ game_init(struct game_state *state) {
         state->frame_time = state->delta * 1000000;
 
         character_create("../data/textures/character.png", &state->character);
+        enemy_create("../data/textures/enemy.png", &state->enemy);
         return 1;
 }
 
@@ -114,6 +119,7 @@ game_loop(struct game_state *state) {
 
                 game_window_clear(sfBlack, state->window);
                 game_draw_sprite(state->character.sprite, state->window);
+                game_draw_sprite(state->enemy.sprite, state->window);
                 game_window_display(state->window);
         }
 
@@ -142,12 +148,34 @@ game_process(struct game_state *state) {
         }
 
         character_process(&state->character);
-
         return 0;
+}
+
+void
+game_resolve_collision(struct game_state *state) {
+        struct aabb a;
+        a.x = state->character.x + state->character.dx * state->delta;
+        a.y = state->character.y + state->character.dy * state->delta;
+        a.width = state->character.width;
+        a.height = state->character.height;
+
+        struct aabb b;
+        b.x = state->enemy.x + state->enemy.dx * state->delta;
+        b.y = state->enemy.y + state->enemy.dy * state->delta;
+        b.width = state->enemy.width;
+        b.height = state->enemy.height;
+
+        if (physics_aabb(&a, &b)) {
+                state->character.dx = 0;
+                state->character.dy = 0;
+                state->enemy.dx = 0;
+                state->enemy.dy = 0;
+        }
 }
 
 inline void
 game_update(struct game_state *state) {
+        game_resolve_collision(state);
         character_update(state->delta, &state->character);
 }
 

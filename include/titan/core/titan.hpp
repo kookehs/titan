@@ -18,6 +18,7 @@
 #include "SFML/System/Time.h"
 
 #include "titan/core/character.hpp"
+#include "titan/core/enemy.hpp"
 #include "titan/utility/hashmap.hpp"
 
 struct game_api {
@@ -29,6 +30,7 @@ struct game_state {
         struct character character;
         sfClock *clock = nullptr;
         float delta = 0.0f;
+        struct enemy enemy;
         sfInt64 frame_time = 0.0f;
         sfTime update_time = {};
         sfRenderWindow *window = nullptr;
@@ -36,14 +38,15 @@ struct game_state {
 
 extern "C" const struct game_api api;
 
-void game_state_destroy(struct game_state *);
+void game_destroy(struct game_state *);
 void game_draw_sprite(sfSprite *, sfRenderWindow *);
 int game_init(struct game_state *);
 int game_load_config(char *path, struct hashmap *);
 int game_loop(struct game_state *);
 int game_process(struct game_state *);
+void game_resolve_collision(struct game_state *);
 void game_update(struct game_state *);
 void game_window_clear(sfColor, sfRenderWindow *);
 void game_window_display(sfRenderWindow *);
 
-#endif  /* TITAN_CORE_TITAN_HPP_ */
+#endif /* TITAN_CORE_TITAN_HPP_ */

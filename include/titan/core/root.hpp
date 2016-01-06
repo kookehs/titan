@@ -29,4 +29,4 @@ void game_unload(struct game *);
 void main_loop(char *, struct game *);
 FILETIME last_write_time(char *);
 
-#endif  /* TITAN_CORE_ROOT_HPP_ */
+#endif /* TITAN_CORE_ROOT_HPP_ */
