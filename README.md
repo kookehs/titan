@@ -8,8 +8,6 @@ Project Titan is an accumulation of technologies and techniques I have learned p
   * Axis-Aligned Bounding Box Collision
 
 ## Requirements
-
-### General
   * Windows
   * Microsoft C / C++ Compiler
   * [CSFML](http://www.sfml-dev.org/download/csfml/) v2.x

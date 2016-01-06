@@ -124,7 +124,7 @@ game_loop(struct game_state *state) {
         }
 
         if (error_code)
-                game_state_destroy(state);
+                game_destroy(state);
 
         return error_code;
 }
