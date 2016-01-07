@@ -10,8 +10,8 @@
 #ifndef TITAN_CORE_CHARACTER_HPP_
 #define TITAN_CORE_CHARACTER_HPP_
 
-#include "SFML/Graphics/Sprite.h"
-#include "SFML/Graphics/Texture.h"
+struct sfSprite;
+struct sfTexture;
 
 struct character {
         float x = 0.0f;

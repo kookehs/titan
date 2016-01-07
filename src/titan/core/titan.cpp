@@ -15,8 +15,11 @@
 #include <string.h>
 #include <windows.h>
 
+#include "SFML/Graphics/RenderWindow.h"
+#include "SFML/System/Clock.h"
 #include "SFML/Window/Event.h"
 
+#include "titan/utility/hashmap.hpp"
 #include "titan/utility/misc.hpp"
 #include "titan/utility/physics.hpp"
 
@@ -25,7 +28,7 @@ game_destroy(struct game_state *state) {
         sfRenderWindow_destroy(state->window);
         state->window = nullptr;
         character_destroy(&state->character);
-        enemy_destroy(&state->enemy);
+        enemy_destroy(&state->enemys);
 }
 
 inline void
@@ -66,7 +69,7 @@ game_init(struct game_state *state) {
         state->frame_time = state->delta * 1000000;
 
         character_create("../data/textures/character.png", &state->character);
-        enemy_create("../data/textures/enemy.png", &state->enemy);
+        enemy_create("../data/textures/enemy.png", &state->enemys);
         return 1;
 }
 
@@ -118,8 +121,7 @@ game_loop(struct game_state *state) {
                 }
 
                 game_window_clear(sfBlack, state->window);
-                game_draw_sprite(state->character.sprite, state->window);
-                game_draw_sprite(state->enemy.sprite, state->window);
+                game_window_render(state);
                 game_window_display(state->window);
         }
 
@@ -144,10 +146,16 @@ game_process(struct game_state *state) {
                                 sfRenderWindow_close(state->window);
                                 return 1;
                         }
+                } else if (event.type == sfEvtGainedFocus) {
+                        state->window_focused = true;
+                } else if (event.type == sfEvtLostFocus) {
+                        state->window_focused = false;
                 }
         }
 
-        character_process(&state->character);
+        if (state->window_focused)
+                character_process(&state->character);
+
         return 0;
 }
 
@@ -160,16 +168,16 @@ game_resolve_collision(struct game_state *state) {
         a.height = state->character.height;
 
         struct aabb b;
-        b.x = state->enemy.x + state->enemy.dx * state->delta;
-        b.y = state->enemy.y + state->enemy.dy * state->delta;
-        b.width = state->enemy.width;
-        b.height = state->enemy.height;
+        b.x = state->enemys.x + state->enemys.dx * state->delta;
+        b.y = state->enemys.y + state->enemys.dy * state->delta;
+        b.width = state->enemys.width;
+        b.height = state->enemys.height;
 
         if (physics_aabb(&a, &b)) {
                 state->character.dx = 0;
                 state->character.dy = 0;
-                state->enemy.dx = 0;
-                state->enemy.dy = 0;
+                state->enemys.dx = 0;
+                state->enemys.dy = 0;
         }
 }
 
@@ -182,6 +190,12 @@ game_update(struct game_state *state) {
 inline void
 game_window_clear(sfColor color, sfRenderWindow *window) {
         sfRenderWindow_clear(window, color);
+}
+
+inline void
+game_window_render(struct game_state *state) {
+        game_draw_sprite(state->character.sprite, state->window);
+        game_draw_sprite(state->enemys.sprite, state->window);
 }
 
 inline void

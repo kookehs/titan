@@ -12,14 +12,15 @@
 
 #include <windows.h>
 
-#include "SFML/Graphics/CircleShape.h"
-#include "SFML/Graphics/RenderWindow.h"
-#include "SFML/System/Clock.h"
+#include "SFML/Graphics/Color.h"
 #include "SFML/System/Time.h"
 
 #include "titan/core/character.hpp"
 #include "titan/core/enemy.hpp"
-#include "titan/utility/hashmap.hpp"
+
+struct hashmap;
+struct sfClock;
+struct sfRenderWindow;
 
 struct game_api {
         int (*init)(struct game_state *);
@@ -30,10 +31,11 @@ struct game_state {
         struct character character;
         sfClock *clock = nullptr;
         float delta = 0.0f;
-        struct enemy enemy;
+        struct enemy enemys;
         sfInt64 frame_time = 0.0f;
         sfTime update_time = {};
         sfRenderWindow *window = nullptr;
+        bool window_focused = true;
 };
 
 extern "C" const struct game_api api;
@@ -47,6 +49,7 @@ int game_process(struct game_state *);
 void game_resolve_collision(struct game_state *);
 void game_update(struct game_state *);
 void game_window_clear(sfColor, sfRenderWindow *);
+void game_window_render(struct game_state *);
 void game_window_display(sfRenderWindow *);
 
 #endif /* TITAN_CORE_TITAN_HPP_ */

@@ -9,6 +9,9 @@
 
 #include "titan/core/enemy.hpp"
 
+#include "SFML/Graphics/Sprite.h"
+#include "SFML/Graphics/Texture.h"
+
 int
 enemy_create(char *path, struct enemy *enemy) {
         enemy->x = 250.0f;

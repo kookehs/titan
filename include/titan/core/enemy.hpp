@@ -10,8 +10,8 @@
 #ifndef TITAN_CORE_ENEMY_HPP_
 #define TITAN_CORE_ENEMY_HPP_
 
-#include "SFML/Graphics/Sprite.h"
-#include "SFML/Graphics/Texture.h"
+struct sfSprite;
+struct sfTexture;
 
 struct enemy {
         float x = 0.0f;

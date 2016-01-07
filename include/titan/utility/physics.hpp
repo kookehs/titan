@@ -10,10 +10,6 @@
 #ifndef TITAN_CORE_PHYSICS_HPP_
 #define TITAN_CORE_PHYSICS_HPP_
 
-struct collision {
-
-};
-
 struct aabb {
         float x = 0.0f;
         float y = 0.0f;

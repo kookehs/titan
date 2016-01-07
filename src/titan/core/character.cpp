@@ -9,6 +9,8 @@
 
 #include "titan/core/character.hpp"
 
+#include "SFML/Graphics/Sprite.h"
+#include "SFML/Graphics/Texture.h"
 #include "SFML/Window/Keyboard.h"
 
 int
