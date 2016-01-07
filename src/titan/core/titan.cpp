@@ -23,17 +23,51 @@
 #include "titan/utility/misc.hpp"
 #include "titan/utility/physics.hpp"
 
+int
+game_add_enemy(struct game_state *state, char *path, float x, float y) {
+        // TODO(bill): Relocate enemy related functions
+        if (state->enemy_count == 0) {
+                state->enemys = (struct enemy *)malloc(sizeof(*state->enemys));
+
+                if (state->enemys == nullptr)
+                        return 0;
+
+                state->enemy_count = 1;
+        } else {
+                size_t size = (state->enemy_count + 1) * sizeof(struct enemy);
+                struct enemy *tmp = (struct enemy *)realloc(state->enemys, size);
+
+                if (tmp == nullptr)
+                        return 0;
+
+                state->enemys = tmp;
+                ++state->enemy_count;
+        }
+
+        enemy_create(path, &state->enemys[state->enemy_count - 1], x, y);
+        return 1;
+}
+
 inline void
 game_destroy(struct game_state *state) {
         sfRenderWindow_destroy(state->window);
         state->window = nullptr;
         character_destroy(&state->character);
-        enemy_destroy(&state->enemys);
+        enemy_destroy(state->enemys, state->enemy_count);
 }
 
 inline void
 game_draw_sprite(sfSprite *sprite, sfRenderWindow *window) {
         sfRenderWindow_drawSprite(window, sprite, nullptr);
+}
+
+void
+game_enumerate_enemy(struct game_state *state) {
+        struct enemy *enemy = state->enemys;
+
+        for (size_t i = 0; i < state->enemy_count; ++i, ++enemy) {
+                game_draw_sprite(enemy->sprite, state->window);
+        }
 }
 
 int
@@ -69,7 +103,9 @@ game_init(struct game_state *state) {
         state->frame_time = state->delta * 1000000;
 
         character_create("../data/textures/character.png", &state->character);
-        enemy_create("../data/textures/enemy.png", &state->enemys);
+        // enemy_create("../data/textures/enemy.png", &state->enemys);
+        game_add_enemy(state, "../data/textures/enemy.png", 200, 200);
+        game_add_enemy(state, "../data/textures/enemy.png", 400, 400);
         return 1;
 }
 
@@ -167,6 +203,7 @@ game_resolve_collision(struct game_state *state) {
         a.width = state->character.width;
         a.height = state->character.height;
 
+        /*
         struct aabb b;
         b.x = state->enemys.x + state->enemys.dx * state->delta;
         b.y = state->enemys.y + state->enemys.dy * state->delta;
@@ -179,6 +216,7 @@ game_resolve_collision(struct game_state *state) {
                 state->enemys.dx = 0;
                 state->enemys.dy = 0;
         }
+        */
 }
 
 inline void
@@ -195,7 +233,8 @@ game_window_clear(sfColor color, sfRenderWindow *window) {
 inline void
 game_window_render(struct game_state *state) {
         game_draw_sprite(state->character.sprite, state->window);
-        game_draw_sprite(state->enemys.sprite, state->window);
+        // game_draw_sprite(state->enemys.sprite, state->window);
+        game_enumerate_enemy(state);
 }
 
 inline void

@@ -171,7 +171,7 @@ hashmap_insert(char *key, char *value, struct hashmap *map) {
 
                 bucket->size = 1;
         } else {
-                size_t size = (bucket->size + 1) * sizeof(*pair);
+                size_t size = (bucket->size + 1) * sizeof(struct pair);
                 struct pair *tmp = (struct pair *)realloc(bucket->pairs, size);
 
                 if (tmp == nullptr) {

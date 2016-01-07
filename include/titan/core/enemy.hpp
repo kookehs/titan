@@ -24,8 +24,8 @@ struct enemy {
         sfTexture *texture = nullptr;
 };
 
-int enemy_create(char *, struct enemy *);
-void enemy_destroy(struct enemy *);
+int enemy_create(char *, struct enemy *, float, float);
+void enemy_destroy(struct enemy *, size_t);
 void enemy_move(float, struct enemy *);
 void enemy_update(float, struct enemy *);
 

@@ -31,7 +31,8 @@ struct game_state {
         struct character character;
         sfClock *clock = nullptr;
         float delta = 0.0f;
-        struct enemy enemys;
+        size_t enemy_count = 0;
+        struct enemy *enemys;
         sfInt64 frame_time = 0.0f;
         sfTime update_time = {};
         sfRenderWindow *window = nullptr;
@@ -40,8 +41,10 @@ struct game_state {
 
 extern "C" const struct game_api api;
 
+int game_add_enemy(struct game_state *, char *, float, float);
 void game_destroy(struct game_state *);
 void game_draw_sprite(sfSprite *, sfRenderWindow *);
+void game_enumerate_enemy(struct game_state *);
 int game_init(struct game_state *);
 int game_load_config(char *path, struct hashmap *);
 int game_loop(struct game_state *);

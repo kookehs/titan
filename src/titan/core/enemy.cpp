@@ -13,9 +13,9 @@
 #include "SFML/Graphics/Texture.h"
 
 int
-enemy_create(char *path, struct enemy *enemy) {
-        enemy->x = 250.0f;
-        enemy->y = 250.0f;
+enemy_create(char *path, struct enemy *enemy, float x, float y) {
+        enemy->x = x;
+        enemy->y = y;
         enemy->dx = 0.0f;
         enemy->dy = 0.0f;
         enemy->texture = sfTexture_createFromFile(path, nullptr);
@@ -36,9 +36,13 @@ enemy_create(char *path, struct enemy *enemy) {
 }
 
 void
-enemy_destroy(struct enemy *enemy) {
-        sfSprite_destroy(enemy->sprite);
-        sfTexture_destroy(enemy->texture);
+enemy_destroy(struct enemy *enemys, size_t count) {
+        struct enemy *enemy = enemys;
+
+        for (size_t i = 0; i < count; ++i, ++enemy) {
+                sfSprite_destroy(enemy->sprite);
+                sfTexture_destroy(enemy->texture);
+        }
 }
 
 inline void
