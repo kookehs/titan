@@ -5,13 +5,18 @@
 // to Project Titan.
 //
 // You should have received a copy of the CC0 legalcode along with this
-// work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
+// work. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
 #include "titan/core/character.hpp"
 
+#include <math.h>
+
+#include "SFML/Graphics/RenderWindow.h"
 #include "SFML/Graphics/Sprite.h"
 #include "SFML/Graphics/Texture.h"
 #include "SFML/Window/Keyboard.h"
+
+#include "titan/utility/misc.hpp"
 
 int
 character_create(char *path, struct character *character) {
@@ -19,7 +24,8 @@ character_create(char *path, struct character *character) {
         character->y = 100.0f;
         character->dx = 0.0f;
         character->dy = 0.0f;
-        character->speed = 50.0f;
+        character->acceleration = 20.0f;
+        character->max_speed = 100.0f;
         character->texture = sfTexture_createFromFile(path, nullptr);
         character->width = sfTexture_getSize(character->texture).x;
         character->height = sfTexture_getSize(character->texture).y;
@@ -43,6 +49,11 @@ character_destroy(struct character *character) {
         sfTexture_destroy(character->texture);
 }
 
+void
+character_draw(struct character *character, sfRenderWindow *window) {
+        sfRenderWindow_drawSprite(window, character->sprite, nullptr);
+}
+
 inline void
 character_move(float delta, struct character *character) {
         float dx = character->dx * delta;
@@ -50,23 +61,29 @@ character_move(float delta, struct character *character) {
         character->x += dx;
         character->y += dy;
         sfSprite_move(character->sprite, {dx, dy});
-        character->dx = 0.0f;
-        character->dy = 0.0f;
+        character->dx += sign(character->dx) * -1.5f;
+        character->dy += sign(character->dy) * -1.5f;
 }
 
 void
 character_process(struct character *character) {
         if (sfKeyboard_isKeyPressed(sfKeyW))
-                character->dy += -character->speed;
+                character->dy -= character->acceleration;
 
         if (sfKeyboard_isKeyPressed(sfKeyS))
-                character->dy += character->speed;
+                character->dy += character->acceleration;
 
         if (sfKeyboard_isKeyPressed(sfKeyA))
-                character->dx += -character->speed;
+                character->dx -= character->acceleration;
 
         if (sfKeyboard_isKeyPressed(sfKeyD))
-                character->dx += character->speed;
+                character->dx += character->acceleration;
+
+        if (fabs(character->dx) > character->max_speed)
+                character->dx = sign(character->dx) * character->max_speed;
+
+        if (fabs(character->dy) > character->max_speed)
+                character->dy = sign(character->dy) * character->max_speed;
 }
 
 void

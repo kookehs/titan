@@ -5,9 +5,14 @@
 // to Project Titan.
 //
 // You should have received a copy of the CC0 legalcode along with this
-// work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
+// work. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
 #include <string.h>
+
+int
+sign(float x) {
+        return (x > 0) - (x < 0);
+}
 
 void
 trim(char **input, char *delim) {

@@ -5,7 +5,7 @@
 // to Project Titan.
 //
 // You should have received a copy of the CC0 legalcode along with this
-// work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
+// work. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
 #include "titan/core/titan.hpp"
 
@@ -23,51 +23,12 @@
 #include "titan/utility/misc.hpp"
 #include "titan/utility/physics.hpp"
 
-int
-game_add_enemy(struct game_state *state, char *path, float x, float y) {
-        // TODO(bill): Relocate enemy related functions
-        if (state->enemy_count == 0) {
-                state->enemys = (struct enemy *)malloc(sizeof(*state->enemys));
-
-                if (state->enemys == nullptr)
-                        return 0;
-
-                state->enemy_count = 1;
-        } else {
-                size_t size = (state->enemy_count + 1) * sizeof(struct enemy);
-                struct enemy *tmp = (struct enemy *)realloc(state->enemys, size);
-
-                if (tmp == nullptr)
-                        return 0;
-
-                state->enemys = tmp;
-                ++state->enemy_count;
-        }
-
-        enemy_create(path, &state->enemys[state->enemy_count - 1], x, y);
-        return 1;
-}
-
 inline void
 game_destroy(struct game_state *state) {
         sfRenderWindow_destroy(state->window);
         state->window = nullptr;
         character_destroy(&state->character);
-        enemy_destroy(state->enemys, state->enemy_count);
-}
-
-inline void
-game_draw_sprite(sfSprite *sprite, sfRenderWindow *window) {
-        sfRenderWindow_drawSprite(window, sprite, nullptr);
-}
-
-void
-game_enumerate_enemy(struct game_state *state) {
-        struct enemy *enemy = state->enemys;
-
-        for (size_t i = 0; i < state->enemy_count; ++i, ++enemy) {
-                game_draw_sprite(enemy->sprite, state->window);
-        }
+        enemy_list_destroy(&state->enemys);
 }
 
 int
@@ -93,19 +54,25 @@ game_init(struct game_state *state) {
         uint32_t bit_depth = strtol(buffer, nullptr, 10);
         hashmap_at(map, "FrameRate", sizeof(buffer), buffer);
         uint32_t frame_rate = strtol(buffer, nullptr, 10);
+        hashmap_at(map, "VSync", sizeof(buffer), buffer);
+        bool vsync = strtol(buffer, nullptr, 10);
         hashmap_destroy(map);
 
         sfVideoMode mode = {width, height, bit_depth};
         state->window = sfRenderWindow_create(mode, title, sfClose, nullptr);
+
+        if (vsync)
+                sfRenderWindow_setVerticalSyncEnabled(state->window, true);
+
         state->clock = sfClock_create();
         state->update_time = sfTime_Zero;
         state->delta = 1.0f / frame_rate;
         state->frame_time = state->delta * 1000000;
 
         character_create("../data/textures/character.png", &state->character);
-        // enemy_create("../data/textures/enemy.png", &state->enemys);
-        game_add_enemy(state, "../data/textures/enemy.png", 200, 200);
-        game_add_enemy(state, "../data/textures/enemy.png", 400, 400);
+        char *enemy_texutre = "../data/textures/enemy.png";
+        enemy_list_add(enemy_texutre, 200, 200, &state->enemys);
+        enemy_list_add(enemy_texutre, 400, 400, &state->enemys);
         return 1;
 }
 
@@ -157,7 +124,7 @@ game_loop(struct game_state *state) {
                 }
 
                 game_window_clear(sfBlack, state->window);
-                game_window_render(state);
+                game_window_draw(state);
                 game_window_display(state->window);
         }
 
@@ -203,20 +170,22 @@ game_resolve_collision(struct game_state *state) {
         a.width = state->character.width;
         a.height = state->character.height;
 
-        /*
-        struct aabb b;
-        b.x = state->enemys.x + state->enemys.dx * state->delta;
-        b.y = state->enemys.y + state->enemys.dy * state->delta;
-        b.width = state->enemys.width;
-        b.height = state->enemys.height;
+        struct enemy *enemy = state->enemys.enemys;
 
-        if (physics_aabb(&a, &b)) {
-                state->character.dx = 0;
-                state->character.dy = 0;
-                state->enemys.dx = 0;
-                state->enemys.dy = 0;
+        for (size_t i = 0; i < state->enemys.size; ++i, ++enemy) {
+                struct aabb b;
+                b.x = enemy->x + enemy->dx * state->delta;
+                b.y = enemy->y + enemy->dy * state->delta;
+                b.width = enemy->width;
+                b.height = enemy->height;
+
+                if (physics_aabb(&a, &b)) {
+                        state->character.dx = 0;
+                        state->character.dy = 0;
+                        enemy->dx = 0;
+                        enemy->dy = 0;
+                }
         }
-        */
 }
 
 inline void
@@ -231,15 +200,14 @@ game_window_clear(sfColor color, sfRenderWindow *window) {
 }
 
 inline void
-game_window_render(struct game_state *state) {
-        game_draw_sprite(state->character.sprite, state->window);
-        // game_draw_sprite(state->enemys.sprite, state->window);
-        game_enumerate_enemy(state);
+game_window_display(sfRenderWindow *window) {
+        sfRenderWindow_display(window);
 }
 
 inline void
-game_window_display(sfRenderWindow *window) {
-        sfRenderWindow_display(window);
+game_window_draw(struct game_state *state) {
+        character_draw(&state->character, state->window);
+        enemy_list_draw(&state->enemys, state->window);
 }
 
 extern "C" const struct game_api api = {
