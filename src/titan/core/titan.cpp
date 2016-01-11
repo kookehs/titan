@@ -42,9 +42,9 @@ game_init(struct game_state *state) {
                 return 0;
 
         game_load_config("../data/common.cfg", map);
-        char buffer[UCHAR_MAX];
+        char buffer[UCHAR_MAX] = {0};
         hashmap_at(map, "WindowTitle", sizeof(buffer), buffer);
-        char title[UCHAR_MAX];
+        char title[UCHAR_MAX] = {0};
         strncpy(title, buffer, sizeof(title));
         hashmap_at(map, "WindowHeight", sizeof(buffer), buffer);
         uint32_t height = strtol(buffer, nullptr, 10);
@@ -162,11 +162,17 @@ game_process(struct game_state *state) {
         return 0;
 }
 
+
+
 void
 game_resolve_collision(struct game_state *state) {
+        // TODO(bill): Handle collision in an more optimal manner
+        float character_dx = state->character.dx;
+        float character_dy = state->character.dy;
+
         struct aabb a;
-        a.x = state->character.x + state->character.dx * state->delta;
-        a.y = state->character.y + state->character.dy * state->delta;
+        a.x = state->character.x + character_dx * state->delta;
+        a.y = state->character.y + character_dy * state->delta;
         a.width = state->character.width;
         a.height = state->character.height;
 
@@ -180,8 +186,20 @@ game_resolve_collision(struct game_state *state) {
                 b.height = enemy->height;
 
                 if (physics_aabb(&a, &b)) {
-                        state->character.dx = 0;
-                        state->character.dy = 0;
+                        struct aabb c;
+                        c.x = state->character.x;
+                        c.y = state->character.y;
+                        c.width = state->character.width;
+                        c.height = state->character.height;
+
+                        enum side hit = physics_aabb_hit_side(&a, &b, &c);
+
+                        if (hit == bottom || hit == top) {
+                                state->character.dy *= -1;
+                        } else if (hit == left || hit == right) {
+                                state->character.dx *= -1;
+                        }
+
                         enemy->dx = 0;
                         enemy->dy = 0;
                 }

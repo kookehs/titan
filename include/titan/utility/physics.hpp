@@ -10,6 +10,14 @@
 #ifndef TITAN_CORE_PHYSICS_HPP_
 #define TITAN_CORE_PHYSICS_HPP_
 
+enum side {
+        none,
+        bottom,
+        left,
+        right,
+        top
+};
+
 struct aabb {
         float x = 0.0f;
         float y = 0.0f;
@@ -18,5 +26,6 @@ struct aabb {
 };
 
 bool physics_aabb(struct aabb *, struct aabb *);
+enum side physics_aabb_hit_side(struct aabb *, struct aabb *, struct aabb *);
 
 #endif /* TITAN_CORE_PHYSICS_HPP_ */

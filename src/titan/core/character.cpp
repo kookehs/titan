@@ -61,8 +61,8 @@ character_move(float delta, struct character *character) {
         character->x += dx;
         character->y += dy;
         sfSprite_move(character->sprite, {dx, dy});
-        character->dx += sign(character->dx) * -1.5f;
-        character->dy += sign(character->dy) * -1.5f;
+        character->dx += sign(character->dx) * -1.0f;
+        character->dy += sign(character->dy) * -1.0f;
 }
 
 void

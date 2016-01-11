@@ -18,3 +18,20 @@ physics_aabb(struct aabb *a, struct aabb *b) {
 
         return true;
 }
+
+enum side
+physics_aabb_hit_side(struct aabb *a, struct aabb *b, struct aabb *c) {
+        enum side hit = none;
+
+        if ((c->y > b->y + b->height) && (a->y < b->y + b->height)) {
+                hit = bottom;
+        } else if ((c->x + c->width < b->x) && (a->x + a->width > b->x)) {
+                hit = left;
+        } else if ((c->x > b->x + b->width) && (a->x < b->x + b->width)) {
+                hit = right;
+        } else if ((c->y + c->height < b->y) && (a->y + a->height > b->y)) {
+                hit = top;
+        }
+
+        return hit;
+}
