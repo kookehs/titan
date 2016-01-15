@@ -9,18 +9,19 @@
 
 #include "titan/utility/physics.hpp"
 
+#include "titan/utility/types.hpp"
+
 bool
-physics_aabb(struct aabb *a, struct aabb *b) {
-        if ((a->x > b->x + b->width) || (a->x + a->width < b->x) ||
-            (a->y > b->y + b->height) || (a->y + a->height < b->y)) {
+physics_aabb_contains(float x, float y, struct rect_f *a) {
+        if ((x < a->x) || (x > a->x + a->width) ||
+            (y < a->y) || (y > a->y + a->height))
                 return false;
-        }
 
         return true;
 }
 
 enum side
-physics_aabb_hit_side(struct aabb *a, struct aabb *b, struct aabb *c) {
+physics_aabb_hit(struct rect_f *a, struct rect_f *b, struct rect_f *c) {
         enum side hit = none;
 
         if ((c->y > b->y + b->height) && (a->y < b->y + b->height)) {
@@ -34,4 +35,14 @@ physics_aabb_hit_side(struct aabb *a, struct aabb *b, struct aabb *c) {
         }
 
         return hit;
+}
+
+bool
+physics_aabb_intersects(struct rect_f *a, struct rect_f *b) {
+        if ((a->x > b->x + b->width) || (a->x + a->width < b->x) ||
+            (a->y > b->y + b->height) || (a->y + a->height < b->y)) {
+                return false;
+        }
+
+        return true;
 }

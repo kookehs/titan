@@ -10,7 +10,7 @@ set DllExportFunctions=/EXPORT:api
 set ExecutableName=win32_titan
 set ExecutableSourceFiles=root.cpp
 
-set CommonCompilerFlags=/FAs /FC /MDd /nologo /WX /Zi /I%RootDirectory%include/
+set CommonCompilerFlags=/FAs /FC /MDd /nologo /Od /Oi /WX /Zi /I%RootDirectory%include/
 set CommonLinkerFlags=/DEBUG /INCREMENTAL:NO /LIBPATH:%RootDirectory%lib/ csfml-audio.lib csfml-graphics.lib csfml-network.lib csfml-system.lib csfml-window.lib
 
 if not exist "%RootDirectory%bin/" mkdir "%RootDirectory%bin/"

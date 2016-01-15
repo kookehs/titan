@@ -22,6 +22,7 @@
 #include "titan/utility/hashmap.hpp"
 #include "titan/utility/misc.hpp"
 #include "titan/utility/physics.hpp"
+#include "titan/utility/types.hpp"
 
 inline void
 game_destroy(struct game_state *state) {
@@ -70,7 +71,7 @@ game_init(struct game_state *state) {
         state->frame_time = state->delta * 1000000;
 
         character_create("../data/textures/character.png", &state->character);
-        char *enemy_texutre = "../data/textures/enemy.png";
+        char *enemy_texutre = "../data/textures/enemy_big.png";
         enemy_list_add(enemy_texutre, 200, 200, &state->enemys);
         enemy_list_add(enemy_texutre, 400, 400, &state->enemys);
         return 1;
@@ -162,15 +163,13 @@ game_process(struct game_state *state) {
         return 0;
 }
 
-
-
 void
 game_resolve_collision(struct game_state *state) {
         // TODO(bill): Handle collision in an more optimal manner
         float character_dx = state->character.dx;
         float character_dy = state->character.dy;
 
-        struct aabb a;
+        struct rect_f a;
         a.x = state->character.x + character_dx * state->delta;
         a.y = state->character.y + character_dy * state->delta;
         a.width = state->character.width;
@@ -179,20 +178,20 @@ game_resolve_collision(struct game_state *state) {
         struct enemy *enemy = state->enemys.enemys;
 
         for (size_t i = 0; i < state->enemys.size; ++i, ++enemy) {
-                struct aabb b;
+                struct rect_f b;
                 b.x = enemy->x + enemy->dx * state->delta;
                 b.y = enemy->y + enemy->dy * state->delta;
                 b.width = enemy->width;
                 b.height = enemy->height;
 
-                if (physics_aabb(&a, &b)) {
-                        struct aabb c;
+                if (physics_aabb_intersects(&a, &b)) {
+                        struct rect_f c;
                         c.x = state->character.x;
                         c.y = state->character.y;
                         c.width = state->character.width;
                         c.height = state->character.height;
 
-                        enum side hit = physics_aabb_hit_side(&a, &b, &c);
+                        enum side hit = physics_aabb_hit(&a, &b, &c);
 
                         if (hit == bottom || hit == top) {
                                 state->character.dy *= -1;

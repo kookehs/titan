@@ -10,6 +10,8 @@
 #ifndef TITAN_CORE_PHYSICS_HPP_
 #define TITAN_CORE_PHYSICS_HPP_
 
+struct rect_f;
+
 enum side {
         none,
         bottom,
@@ -18,14 +20,8 @@ enum side {
         top
 };
 
-struct aabb {
-        float x = 0.0f;
-        float y = 0.0f;
-        float width = 0.0f;
-        float height = 0.0f;
-};
-
-bool physics_aabb(struct aabb *, struct aabb *);
-enum side physics_aabb_hit_side(struct aabb *, struct aabb *, struct aabb *);
+bool physics_aabb_contains(float, float, struct rect_f *);
+enum side physics_aabb_hit(struct rect_f *, struct rect_f *, struct rect_f *);
+bool physics_aabb_intersects(struct rect_f *, struct rect_f *);
 
 #endif /* TITAN_CORE_PHYSICS_HPP_ */
