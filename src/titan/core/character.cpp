@@ -20,21 +20,23 @@
 
 int
 character_create(char *path, struct character *character) {
-        character->x = 100.0f;
-        character->y = 100.0f;
+        character->bounds.x = 100.0f;
+        character->bounds.y = 100.0f;
         character->dx = 0.0f;
         character->dy = 0.0f;
         character->acceleration = 20.0f;
         character->max_speed = 100.0f;
         character->texture = sfTexture_createFromFile(path, nullptr);
-        character->width = sfTexture_getSize(character->texture).x;
-        character->height = sfTexture_getSize(character->texture).y;
+        character->bounds.width = sfTexture_getSize(character->texture).x;
+        character->bounds.height = sfTexture_getSize(character->texture).y;
 
         if (character->texture == nullptr)
                 return 0;
 
         character->sprite = sfSprite_create();
-        sfSprite_setPosition(character->sprite, {character->x, character->y});
+        float x = character->bounds.x;
+        float y = character->bounds.y;
+        sfSprite_setPosition(character->sprite, {x, y});
         sfSprite_setTexture(character->sprite, character->texture, true);
 
         if (character->sprite == nullptr)
@@ -58,8 +60,8 @@ inline void
 character_move(float delta, struct character *character) {
         float dx = character->dx * delta;
         float dy = character->dy * delta;
-        character->x += dx;
-        character->y += dy;
+        character->bounds.x += dx;
+        character->bounds.y += dy;
         sfSprite_move(character->sprite, {dx, dy});
         character->dx += sign(character->dx) * -1.0f;
         character->dy += sign(character->dy) * -1.0f;

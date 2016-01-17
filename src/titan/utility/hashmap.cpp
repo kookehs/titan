@@ -39,28 +39,28 @@ hashmap_at(struct hashmap *map, char *key, size_t size, char *out) {
         return 1;
 }
 
-struct hashmap *
-hashmap_create(size_t capacity) {
+int
+hashmap_create(size_t capacity, struct hashmap **map) {
         if (capacity < 1)
-                return nullptr;
+                return 0;
 
-        struct hashmap *map = (struct hashmap *)malloc(sizeof(*map));
+        *map = (struct hashmap *)malloc(sizeof(*(*map)));
 
-        if (map == nullptr)
-                return nullptr;
+        if (*map == nullptr)
+                return 0;
 
-        map->size = capacity;
-        size_t size = map->size * sizeof(*map->buckets);
-        map->buckets = (struct bucket *)malloc(size);
+        (*map)->size = capacity;
+        size_t size = (*map)->size * sizeof(*(*map)->buckets);
+        (*map)->buckets = (struct bucket *)malloc(size);
 
-        if (map->buckets == nullptr) {
-                free(map);
-                map = nullptr;
+        if ((*map)->buckets == nullptr) {
+                free(*map);
+                *map = nullptr;
         } else {
-               memset(map->buckets, 0, size);
+               memset((*map)->buckets, 0, size);
         }
 
-        return map;
+        return 1;
 }
 
 void
@@ -87,10 +87,11 @@ hashmap_destroy(struct hashmap *map) {
         free(map->buckets);
         map->buckets = nullptr;
         free(map);
+        map = nullptr;
 }
 
 int
-hashmap_enumerate(struct hashmap *map, map_enum_func *func) {
+hashmap_enumerate(struct hashmap *map, map_enum_fn *func) {
         if (map == nullptr || func == nullptr)
                 return 0;
 
@@ -157,6 +158,7 @@ hashmap_insert(char *key, char *value, struct hashmap *map) {
 
         if (new_value == nullptr) {
                 free(new_key);
+                new_key = nullptr;
                 return 0;
         }
 
@@ -165,7 +167,9 @@ hashmap_insert(char *key, char *value, struct hashmap *map) {
 
                 if (bucket->pairs == nullptr) {
                         free(new_key);
+                        new_key = nullptr;
                         free(new_value);
+                        new_value = nullptr;
                         return 0;
                 }
 

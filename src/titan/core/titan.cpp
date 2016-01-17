@@ -19,17 +19,19 @@
 #include "SFML/System/Clock.h"
 #include "SFML/Window/Event.h"
 
+#include "titan/core/enemy.hpp"
 #include "titan/utility/hashmap.hpp"
+#include "titan/utility/list.hpp"
 #include "titan/utility/misc.hpp"
 #include "titan/utility/physics.hpp"
 #include "titan/utility/types.hpp"
 
 inline void
 game_destroy(struct game_state *state) {
+        sfClock_destroy(state->clock);
         sfRenderWindow_destroy(state->window);
-        state->window = nullptr;
         character_destroy(&state->character);
-        enemy_list_destroy(&state->enemys);
+        list_destroy(state->enemys);
 }
 
 int
@@ -37,7 +39,8 @@ game_init(struct game_state *state) {
         if (state == nullptr)
                 return 0;
 
-        struct hashmap *map = hashmap_create(5);
+        struct hashmap *map;
+        hashmap_create(5, &map);
 
         if (map == nullptr)
                 return 0;
@@ -71,9 +74,23 @@ game_init(struct game_state *state) {
         state->frame_time = state->delta * 1000000;
 
         character_create("../data/textures/character.png", &state->character);
+
+        list_create(sizeof(struct enemy), enemy_destroy, &state->enemys);
         char *enemy_texutre = "../data/textures/enemy_big.png";
-        enemy_list_add(enemy_texutre, 200, 200, &state->enemys);
-        enemy_list_add(enemy_texutre, 400, 400, &state->enemys);
+        struct vector_2f a;
+        a.x = 200;
+        a.y = 200;
+        struct enemy *e = nullptr;
+        enemy_create(enemy_texutre, a, &e);
+        list_push_back(e, state->enemys);
+
+        struct vector_2f b;
+        b.x = 400;
+        b.y = 400;
+        struct enemy *f = nullptr;
+        enemy_create(enemy_texutre, b, &f);
+        list_push_back(f, state->enemys);
+
         return 1;
 }
 
@@ -169,28 +186,21 @@ game_resolve_collision(struct game_state *state) {
         float character_dx = state->character.dx;
         float character_dy = state->character.dy;
 
-        struct rect_f a;
-        a.x = state->character.x + character_dx * state->delta;
-        a.y = state->character.y + character_dy * state->delta;
-        a.width = state->character.width;
-        a.height = state->character.height;
+        struct rect_f a = state->character.bounds;
+        a.x += character_dx * state->delta;
+        a.y += character_dy * state->delta;
 
-        struct enemy *enemy = state->enemys.enemys;
+        struct list_node *current = state->enemys->head;
 
-        for (size_t i = 0; i < state->enemys.size; ++i, ++enemy) {
-                struct rect_f b;
-                b.x = enemy->x + enemy->dx * state->delta;
-                b.y = enemy->y + enemy->dy * state->delta;
-                b.width = enemy->width;
-                b.height = enemy->height;
+        while (current != nullptr) {
+                struct enemy *enemy = (struct enemy *)current->data;
+
+                struct rect_f b = enemy->bounds;
+                b.x += enemy->dx * state->delta;
+                b.y += enemy->dy * state->delta;
 
                 if (physics_aabb_intersects(&a, &b)) {
-                        struct rect_f c;
-                        c.x = state->character.x;
-                        c.y = state->character.y;
-                        c.width = state->character.width;
-                        c.height = state->character.height;
-
+                        struct rect_f c = state->character.bounds;
                         enum side hit = physics_aabb_hit(&a, &b, &c);
 
                         if (hit == bottom || hit == top) {
@@ -202,6 +212,8 @@ game_resolve_collision(struct game_state *state) {
                         enemy->dx = 0;
                         enemy->dy = 0;
                 }
+
+                current = current->next;
         }
 }
 
@@ -224,7 +236,7 @@ game_window_display(sfRenderWindow *window) {
 inline void
 game_window_draw(struct game_state *state) {
         character_draw(&state->character, state->window);
-        enemy_list_draw(&state->enemys, state->window);
+        enemy_draw(state->enemys, state->window);
 }
 
 extern "C" const struct game_api api = {

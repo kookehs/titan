@@ -10,33 +10,25 @@
 #ifndef TITAN_CORE_ENEMY_HPP_
 #define TITAN_CORE_ENEMY_HPP_
 
+#include "titan/utility/types.hpp"
+
+struct list;
 struct sfRenderWindow;
 struct sfSprite;
 struct sfTexture;
 
 struct enemy {
-        float x = 0.0f;
-        float y = 0.0f;
+        struct rect_f bounds;
         float dx = 0.0f;
         float dy = 0.0f;
-        float width = 0.0f;
-        float height = 0.0f;
         sfSprite *sprite = nullptr;
         sfTexture *texture = nullptr;
 };
 
-struct enemy_list {
-        size_t size = 0;
-        struct enemy *enemys;
-};
-
-int enemy_create(char *, float, float, struct enemy *);
-void enemy_destroy(struct enemy *);
+int enemy_create(char *, struct vector_2f, struct enemy **);
+void enemy_destroy(void *);
+void enemy_draw(struct list *, sfRenderWindow *);
 void enemy_move(float, struct enemy *);
 void enemy_update(float, struct enemy *);
-
-int enemy_list_add(char *, float, float, struct enemy_list *);
-void enemy_list_destroy(struct enemy_list *);
-void enemy_list_draw(struct enemy_list *, sfRenderWindow *);
 
 #endif /* TITAN_CORE_ENEMY_HPP_ */

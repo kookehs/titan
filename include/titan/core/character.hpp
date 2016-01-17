@@ -10,17 +10,16 @@
 #ifndef TITAN_CORE_CHARACTER_HPP_
 #define TITAN_CORE_CHARACTER_HPP_
 
+#include "titan/utility/types.hpp"
+
 struct sfRenderWindow;
 struct sfSprite;
 struct sfTexture;
 
 struct character {
-        float x = 0.0f;
-        float y = 0.0f;
+        struct rect_f bounds;
         float dx = 0.0f;
         float dy = 0.0f;
-        float width = 0.0f;
-        float height = 0.0f;
         float acceleration = 20.0f;
         float max_speed = 100.0f;
         sfSprite *sprite = nullptr;

@@ -16,10 +16,9 @@
 #include "SFML/System/Time.h"
 
 #include "titan/core/character.hpp"
-#include "titan/core/enemy.hpp"
 
-struct enemy_list;
 struct hashmap;
+struct list;
 struct sfClock;
 struct sfRenderWindow;
 
@@ -32,7 +31,7 @@ struct game_state {
         struct character character;
         sfClock *clock = nullptr;
         float delta = 0.0f;
-        struct enemy_list enemys;
+        struct list *enemys;
         sfInt64 frame_time = 0.0f;
         sfTime update_time = {};
         sfRenderWindow *window = nullptr;

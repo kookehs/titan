@@ -10,7 +10,7 @@
 #ifndef TITAN_UTILITY_HASHMAP_HPP_
 #define TITAN_UTILITY_HASHMAP_HPP_
 
-using map_enum_func = void (char *, char *);
+using map_enum_fn = void (char *, char *);
 
 struct bucket {
         size_t size;
@@ -28,9 +28,9 @@ struct pair {
 };
 
 int hashmap_at(struct hashmap *, char *, size_t, char *);
-struct hashmap *hashmap_create(size_t);
+int hashmap_create(size_t, struct hashmap **);
 void hashmap_destroy(struct hashmap *);
-int hashmap_enumerate(struct hashmap *, map_enum_func *);
+int hashmap_enumerate(struct hashmap *, map_enum_fn *);
 bool hashmap_exists(struct hashmap *, char *);
 int hashmap_insert(char *, char *, struct hashmap *);
 size_t hashmap_size(struct hashmap *);
