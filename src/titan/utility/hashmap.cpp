@@ -13,7 +13,7 @@
 #include <string.h>
 
 int
-hashmap_at(struct hashmap *map, char *key, size_t size, char *out) {
+hashmap_at(struct hashmap *map, char *key, void *out) {
         if (map == nullptr || key == nullptr)
                 return 0;
 
@@ -24,23 +24,12 @@ hashmap_at(struct hashmap *map, char *key, size_t size, char *out) {
         if (pair == nullptr)
                 return 0;
 
-        if (out == nullptr && size == 0)
-                return strlen(pair->value) + 1;
-
-        if (out == nullptr)
-                return 0;
-
-        size_t length = strlen(pair->value);
-
-        if (length >= size)
-                return 0;
-
-        strncpy(out, pair->value, strlen(pair->value) + 1);
+        memcpy(out, pair->value, map->size_of_data);
         return 1;
 }
 
 int
-hashmap_create(size_t capacity, struct hashmap **map) {
+hashmap_create(size_t size_of_data, size_t capacity, struct hashmap **map) {
         if (capacity < 1)
                 return 0;
 
@@ -50,6 +39,7 @@ hashmap_create(size_t capacity, struct hashmap **map) {
                 return 0;
 
         (*map)->size = capacity;
+        (*map)->size_of_data = size_of_data;
         size_t size = (*map)->size * sizeof(*(*map)->buckets);
         (*map)->buckets = (struct bucket *)malloc(size);
 
@@ -124,28 +114,17 @@ hashmap_exists(struct hashmap *map, char *key) {
 }
 
 int
-hashmap_insert(char *key, char *value, struct hashmap *map) {
+hashmap_insert(char *key, void *value, struct hashmap *map) {
         if (map == nullptr || key == nullptr || value == nullptr)
                 return 0;
 
         size_t key_length = strlen(key) + 1;
-        size_t value_length = strlen(value) + 1;
         size_t index = string_hash(key) % map->size;
         struct bucket *bucket = &map->buckets[index];
         struct pair *pair = pair_at(bucket, key);
 
         if (pair) {
-                if (strlen(pair->value) < value_length) {
-                        size_t size = value_length * sizeof(char);
-                        char *tmp = (char *)realloc(pair->value, size);
-
-                        if (tmp == nullptr)
-                                return 0;
-
-                        pair->value = tmp;
-                }
-
-                strncpy(pair->value, value, strlen(value) + 1);
+                pair->value = value;
                 return 1;
         }
 
@@ -154,7 +133,7 @@ hashmap_insert(char *key, char *value, struct hashmap *map) {
         if (new_key == nullptr)
                 return 0;
 
-        char *new_value = (char *)malloc(value_length * sizeof(char));
+        void *new_value = (void *)malloc(map->size_of_data);
 
         if (new_value == nullptr) {
                 free(new_key);
@@ -192,7 +171,7 @@ hashmap_insert(char *key, char *value, struct hashmap *map) {
         pair->key = new_key;
         pair->value = new_value;
         strncpy(pair->key, key, key_length);
-        strncpy(pair->value, value, value_length);
+        memcpy(pair->value, value, map->size_of_data);
         return 1;
 }
 

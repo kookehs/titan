@@ -24,6 +24,7 @@
 #include "titan/utility/list.hpp"
 #include "titan/utility/misc.hpp"
 #include "titan/utility/physics.hpp"
+#include "titan/utility/quadtree.hpp"
 #include "titan/utility/types.hpp"
 
 inline void
@@ -40,25 +41,25 @@ game_init(struct game_state *state) {
                 return 0;
 
         struct hashmap *map;
-        hashmap_create(5, &map);
+        hashmap_create(UCHAR_MAX, 5, &map);
 
         if (map == nullptr)
                 return 0;
 
         game_load_config("../data/common.cfg", map);
         char buffer[UCHAR_MAX] = {0};
-        hashmap_at(map, "WindowTitle", sizeof(buffer), buffer);
+        hashmap_at(map, "WindowTitle", buffer);
         char title[UCHAR_MAX] = {0};
         strncpy(title, buffer, sizeof(title));
-        hashmap_at(map, "WindowHeight", sizeof(buffer), buffer);
+        hashmap_at(map, "WindowHeight", buffer);
         uint32_t height = strtol(buffer, nullptr, 10);
-        hashmap_at(map, "WindowWidth", sizeof(buffer), buffer);
+        hashmap_at(map, "WindowWidth", buffer);
         uint32_t width = strtol(buffer, nullptr, 10);
-        hashmap_at(map, "BitDepth", sizeof(buffer), buffer);
+        hashmap_at(map, "BitDepth", buffer);
         uint32_t bit_depth = strtol(buffer, nullptr, 10);
-        hashmap_at(map, "FrameRate", sizeof(buffer), buffer);
+        hashmap_at(map, "FrameRate", buffer);
         uint32_t frame_rate = strtol(buffer, nullptr, 10);
-        hashmap_at(map, "VSync", sizeof(buffer), buffer);
+        hashmap_at(map, "VSync", buffer);
         bool vsync = strtol(buffer, nullptr, 10);
         hashmap_destroy(map);
 
@@ -75,7 +76,10 @@ game_init(struct game_state *state) {
 
         character_create("../data/textures/character.png", &state->character);
 
-        list_create(sizeof(struct enemy), enemy_destroy, &state->enemys);
+        struct list_info info;
+        info.size_of_data = sizeof(struct enemy);
+        info.destroy = enemy_destroy;
+        list_create(&info, &state->enemys);
         char *enemy_texutre = "../data/textures/enemy_big.png";
         struct vector_2f a;
         a.x = 200;
@@ -156,8 +160,6 @@ int
 game_process(struct game_state *state) {
         sfEvent event;
 
-        // TODO(bill): Figure out why the following line causes a crash
-        //             Could it be because of varying CRT lbrary?
         while (sfRenderWindow_pollEvent(state->window, &event)) {
                 if (event.type == sfEvtClosed) {
                         sfRenderWindow_close(state->window);
@@ -183,6 +185,71 @@ game_process(struct game_state *state) {
 void
 game_resolve_collision(struct game_state *state) {
         // TODO(bill): Handle collision in an more optimal manner
+        struct list_info list_info;
+        list_info.destroy = enemy_destroy;
+        list_info.size_of_data = sizeof(struct quadtree_item);
+        sfVector2u window_size = sfRenderWindow_getSize(state->window);
+        struct rect_f rect;
+        rect.x = 0.0f;
+        rect.y = 0.0f;
+        rect.width = window_size.x;
+        rect.height = window_size.y;
+        struct quadtree_info info;
+        info.depth = 0;
+        info.rect = &rect;
+        info.list_info = &list_info;
+        struct quadtree *tree = nullptr;
+        quadtree_create(&info, &tree);
+
+        struct list_node *current = state->enemys->head;
+
+        while (current != nullptr) {
+                struct enemy *enemy = (struct enemy *)current->data;
+                struct rect_f b = enemy->bounds;
+                b.x += enemy->dx * state->delta;
+                b.y += enemy->dy * state->delta;
+                struct quadtree_item item;
+                item.data = enemy;
+                item.rect = b;
+                quadtree_insert(&item, tree);
+                current = current->next;
+        }
+
+        struct rect_f a = state->character.bounds;
+        a.x += state->character.dx * state->delta;
+        a.y += state->character.dy * state->delta;
+
+        struct list *nearby_enemies = nullptr;
+        list_create(&list_info, &nearby_enemies);
+        quadtree_at(nearby_enemies, &a, tree);
+
+        struct list_node *node = nearby_enemies->head;
+
+        while (node != nullptr) {
+                struct quadtree_item *item = (struct quadtree_item *)node->data;
+                struct enemy *enemy = (struct enemy *)item->data;
+                struct rect_f b = enemy->bounds;
+                b.x += enemy->dx * state->delta;
+                b.y += enemy->dy * state->delta;
+
+                if (physics_aabb_intersects(&a, &b)) {
+                        struct rect_f c = state->character.bounds;
+                        enum side hit = physics_aabb_hit(&a, &b, &c);
+
+                        if (hit == bottom || hit == top) {
+                                state->character.dy *= -1;
+                        } else if (hit == left || hit == right) {
+                                state->character.dx *= -1;
+                        }
+
+                        enemy->dx = 0;
+                        enemy->dy = 0;
+                }
+
+                node = node->next;
+        }
+
+        /*
         float character_dx = state->character.dx;
         float character_dy = state->character.dy;
 
@@ -215,6 +282,7 @@ game_resolve_collision(struct game_state *state) {
 
                 current = current->next;
         }
+        */
 }
 
 inline void

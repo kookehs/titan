@@ -10,8 +10,13 @@
 #ifndef TITAN_UTILITY_LIST_HPP_
 #define TITAN_UTILITY_LIST_HPP_
 
-typedef void (*list_destroy_fn)(void *);
-typedef void (*list_iterator)(void *);
+using list_destroy_fn = void (*)(void *);
+using list_iterator = void (*)(void *);
+
+struct list_info {
+        list_destroy_fn destroy = nullptr;
+        size_t size_of_data = 0;
+};
 
 struct list_node {
         void *data = nullptr;
@@ -19,14 +24,16 @@ struct list_node {
 };
 
 struct list {
-        list_destroy_fn destroy;
+        list_destroy_fn destroy = nullptr;
         struct list_node *head = nullptr;
         size_t size = 0;
         size_t size_of_data = 0;
         struct list_node *tail = nullptr;
 };
 
-int list_create(size_t, list_destroy_fn, struct list **);
+int list_at(size_t, void *, struct list *);
+int list_copy(struct list *, struct list *);
+int list_create(struct list_info *, struct list **);
 void list_destroy(struct list *);
 void list_enumerate(list_iterator, struct list *);
 int list_peek_back(void *, struct list *);
@@ -34,5 +41,6 @@ int list_peek_front(void *, struct list *);
 int list_pop_front(void *, struct list *);
 int list_push_back(void *, struct list *);
 int list_push_front(void *, struct list *);
+int list_remove_at(size_t, void *, struct list *);
 
 #endif /* TITAN_UTILITY_LIST_HPP_ */

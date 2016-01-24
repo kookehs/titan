@@ -11,10 +11,26 @@
 
 #include <stdlib.h>
 
+#include "titan/utility/hashmap.hpp"
+#include "titan/utility/list.hpp"
+
+int
+quadtree_at(struct list *items, struct rect_f *rect, struct quadtree *tree) {
+        if (items == nullptr || rect == nullptr || tree == nullptr)
+                return 0;
+
+        int quadrant = quadtree_quadrant(rect, tree);
+
+        if (quadrant != -1 && tree->nodes != nullptr)
+                quadtree_at(items, rect, &tree->nodes[quadrant]);
+
+        list_copy(items, tree->items);
+        return 1;
+}
+
 void
 quadtree_clear(struct quadtree *tree) {
-        quadtree_rects_destroy(tree);
-
+        list_destroy(tree->items);
         struct quadtree *node = tree;
 
         for (size_t i = 0; i < tree->size; ++i, ++node) {
@@ -26,66 +42,81 @@ quadtree_clear(struct quadtree *tree) {
 }
 
 int
-quadtree_create(size_t depth, struct rect_f rect, struct quadtree *tree) {
-        tree = (struct quadtree *)malloc(sizeof(*tree));
-
-        if (tree == nullptr)
+quadtree_create(struct quadtree_info *info, struct quadtree **tree) {
+        if (info == nullptr)
                 return 0;
 
-        tree->depth = depth;
-        tree->rect = rect;
-        tree->max_depth = 5;
-        tree->max_rects = 10;
-        tree->rects_size = 0;
-        tree->size = 0;
+        *tree = (struct quadtree *)malloc(sizeof(*(*tree)));
+
+        if (*tree == nullptr)
+                return 0;
+
+        (*tree)->depth = info->depth;
+        (*tree)->items_size = 0;
+        (*tree)->list_info = *info->list_info;
+        (*tree)->max_depth = 5;
+        (*tree)->max_items = 10;
+        (*tree)->rect = *info->rect;
+        (*tree)->size = 0;
+        list_create(info->list_info, &(*tree)->items);
         return 1;
 }
 
-void
-quadtree_insert(struct rect_f rect, struct quadtree *tree) {
+int
+quadtree_insert(struct quadtree_item *item, struct quadtree *tree) {
+        if (item == nullptr || tree == nullptr)
+                return 0;
+
         if (tree->nodes != nullptr) {
-                int quadrant = quadtree_quadrant(rect, tree->nodes);
+                int quadrant = quadtree_quadrant(&item->rect, tree->nodes);
 
                 if (quadrant != -1)
-                        quadtree_insert(rect, &tree->nodes[quadrant]);
+                        quadtree_insert(item, &tree->nodes[quadrant]);
 
-                return;
+                return 0;
         }
 
-        quadtree_rects_insert(rect, tree);
+        list_push_back(item, tree->items);
+        ++tree->items_size;
+        size_t size = tree->items_size;
 
-        size_t size = tree->rects_size;
-
-        if (size > tree->max_rects && tree->depth < tree->max_depth) {
+        if (size > tree->max_items && tree->depth < tree->max_depth) {
                 if (tree->nodes == nullptr)
                         quadtree_split(tree);
 
                 size_t i = 0;
 
                 while (i < size) {
-                        int quadrant = quadtree_quadrant(tree->rects[i], tree);
+                        struct quadtree_item *data = nullptr;
+                        data = (struct quadtree_item *)malloc(sizeof(*data));
+                        list_at(i, data, tree->items);
+                        int quadrant = quadtree_quadrant(&data->rect, tree);
 
                         if (quadrant != -1) {
-                                struct rect_f object;
-                                quadtree_rects_remove(i, tree->rects, &object);
-                                quadtree_insert(object, &tree->nodes[quadrant]);
+                                list_remove_at(i, nullptr, tree->items);
+                                quadtree_insert(data, &tree->nodes[quadrant]);
                         } else {
                                 ++i;
                         }
                 }
         }
+
+        return 1;
 }
 
 int
-quadtree_quadrant(struct rect_f rect, struct quadtree *tree) {
+quadtree_quadrant(struct rect_f *rect, struct quadtree *tree) {
+        if (rect == nullptr || tree == nullptr)
+                return 0;
+
         int quadrant = -1;
         float origin_x = tree->rect.x + tree->rect.width / 2.0f;
         float origin_y = tree->rect.y + tree->rect.height / 2.0f;
 
-        bool top_quadrant = (rect.y + rect.height < origin_y) ? true : false;
-        bool bottom_quadrant = (rect.y > origin_y) ? true : false;
-        bool left_quadrant = (rect.x + rect.width < origin_x);
-        bool right_quadrant = (rect.x > origin_x);
+        bool top_quadrant = (rect->y + rect->height < origin_y) ? true : false;
+        bool bottom_quadrant = (rect->y > origin_y) ? true : false;
+        bool left_quadrant = (rect->x + rect->width < origin_x);
+        bool right_quadrant = (rect->x > origin_x);
 
         if (top_quadrant) {
                 if (right_quadrant) {
@@ -104,91 +135,18 @@ quadtree_quadrant(struct rect_f rect, struct quadtree *tree) {
         return quadrant;
 }
 
-void
-quadtree_rects_destroy(struct quadtree *tree) {
-        struct rect_f *rect = tree->rects;
-
-        for (size_t i = 0; i < tree->rects_size; ++i, ++rect) {
-                if (rect != nullptr) {
-                        free(rect);
-                        rect = nullptr;
-                }
-        }
-}
-
-int
-quadtree_rects_insert(struct rect_f rect, struct quadtree *tree) {
-        if (tree->rects_size == 0) {
-                tree->rects = (struct rect_f *)malloc(sizeof(*tree->rects));
-
-                if (tree->rects == nullptr)
-                        return 0;
-
-                tree->rects_size = 1;
-        } else {
-                size_t size = (tree->rects_size + 1) * sizeof(struct rect_f);
-                struct rect_f *rects = tree->rects;
-                struct rect_f *tmp = (struct rect_f *)realloc(rects, size);
-
-                if (tmp == nullptr)
-                        return 0;
-
-                tree->rects = tmp;
-                ++tree->rects_size;
-        }
-
-        tree->rects[tree->rects_size - 1] = rect;
-        return 1;
-}
-
-void
-quadtree_rects_remove(size_t index, struct rect_f *rects, struct rect_f *rect) {
-        rects[index] = rects[index + 1];
-
-        rect->x = rects[index].x;
-        rect->y = rects[index].y;
-        rect->width = rects[index].width;
-        rect->height = rects[index].height;
-}
-
-void
-quadtree_retrieve(struct rect_f rect, struct quadtree *tree, struct rect_f *objects) {
-        int quadrant = quadtree_quadrant(rect, tree);
-
-        if (quadrant != -1 && tree->nodes != nullptr)
-                quadtree_retrieve(rect, tree, objects);
-
-        if (objects == nullptr) {
-                size_t size = tree->rects_size * sizeof(struct rect_f);
-                objects = (struct rect_f *)malloc(size);
-        } else {
-                size_t size = tree->rects_size * sizeof(struct rect_f);
-                struct rect_f *rects = objects;
-                struct rect_f *tmp = (struct rect_f *)realloc(rects, size);
-                objects = tmp;
-        }
-}
-
 int
 quadtree_split(struct quadtree *tree) {
-        if (tree->size == 0) {
-                tree->nodes = (struct quadtree *)malloc(sizeof(*tree->nodes));
+        if (tree == nullptr)
+                return 0;
 
-                if (tree->nodes == nullptr)
-                        return 0;
+        size_t size = sizeof(struct quadtree) * 4;
+        tree->nodes = (struct quadtree *)malloc(size);
 
-                tree->size = 1;
-        } else {
-                size_t size = (tree->size + 3) * sizeof(struct quadtree);
-                struct quadtree *nodes = tree->nodes;
-                struct quadtree *tmp = (struct quadtree *)realloc(nodes, size);
+        if (tree->nodes == nullptr)
+                return 0;
 
-                if (tmp == nullptr)
-                        return 0;
-
-                tree->nodes = tmp;
-                tree->size += 3;
-        }
+        tree->size = 4;
 
         float x = tree->rect.x;
         float y = tree->rect.y;
@@ -200,28 +158,48 @@ quadtree_split(struct quadtree *tree) {
         a.y = y;
         a.width = width;
         a.height = height;
-        quadtree_create(tree->depth + 1, a, &tree->nodes[tree->size - 4]);
+        struct quadtree_info a_info;
+        a_info.depth = tree->depth + 1;
+        a_info.rect = &a;
+        a_info.list_info = &tree->list_info;
+        struct quadtree *first_tree = &tree->nodes[tree->size - 4];
+        quadtree_create(&a_info, &first_tree);
 
         struct rect_f b;
         b.x = x;
         b.y = y;
         b.width = width;
         b.height = height;
-        quadtree_create(tree->depth + 1, b, &tree->nodes[tree->size - 3]);
+        struct quadtree_info b_info;
+        b_info.depth = tree->depth + 1;
+        b_info.rect = &b;
+        b_info.list_info = &tree->list_info;
+        struct quadtree *second_tree = &tree->nodes[tree->size - 3];
+        quadtree_create(&b_info, &second_tree);
 
         struct rect_f c;
         c.x = x;
         c.y = y + height;
         c.width = width;
         c.height = height;
-        quadtree_create(tree->depth + 1, c, &tree->nodes[tree->size - 2]);
+        struct quadtree_info c_info;
+        c_info.depth = tree->depth + 1;
+        c_info.rect = &c;
+        c_info.list_info = &tree->list_info;
+        struct quadtree *third_tree = &tree->nodes[tree->size - 2];
+        quadtree_create(&c_info, &third_tree);
 
         struct rect_f d;
         d.x = x + width;
         d.y = y + height;
         d.width = width;
         d.height = height;
-        quadtree_create(tree->depth + 1, d, &tree->nodes[tree->size - 1]);
+        struct quadtree_info d_info;
+        d_info.depth = tree->depth + 1;
+        d_info.rect = &d;
+        d_info.list_info = &tree->list_info;
+        struct quadtree *fourth_tree = &tree->nodes[tree->size - 1];
+        quadtree_create(&d_info, &fourth_tree);
 
         return 1;
 }

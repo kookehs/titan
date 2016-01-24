@@ -13,15 +13,48 @@
 #include <string.h>
 
 int
-list_create(size_t size_of_data, list_destroy_fn func, struct list **list) {
-        if (size_of_data < 0)
+list_at(size_t index, void *out, struct list *list) {
+        if (out == nullptr || list == nullptr)
+                return 0;
+
+        if (list->size <= index)
+                return 0;
+
+        struct list_node *current = list->head;
+
+        for (size_t i = 0; i < index; ++i, current = current->next) {
+                current = current->next;
+        }
+
+        memcpy(out, current->data, list->size_of_data);
+        return 1;
+}
+
+int
+list_copy(struct list *out, struct list *list) {
+        if (out == nullptr || list == nullptr)
+                return 0;
+
+        struct list_node *current = list->head;
+
+        while (current != nullptr) {
+                list_push_front(current, out);
+                current = current->next;
+        }
+
+        return 1;
+}
+
+int
+list_create(struct list_info *info, struct list **list) {
+        if (info->size_of_data < 0)
                 return 0;
 
         *list = (struct list *)malloc(sizeof(*(*list)));
-        (*list)->destroy = func;
+        (*list)->destroy = info->destroy;
         (*list)->head = nullptr;
         (*list)->size = 0;
-        (*list)->size_of_data = size_of_data;
+        (*list)->size_of_data = info->size_of_data;
         (*list)->tail = nullptr;
         return 1;
 }
@@ -61,29 +94,29 @@ list_enumerate(list_iterator iterator, struct list *list) {
 }
 
 int
-list_peek_back(void *data, struct list *list) {
-        if (data == nullptr || list == nullptr)
+list_peek_back(void *out, struct list *list) {
+        if (out == nullptr || list == nullptr)
                 return 0;
 
-        memcpy(data, list->tail->data, list->size_of_data);
+        memcpy(out, list->tail->data, list->size_of_data);
         return 1;
 }
 
 int
-list_peek_front(void *data, struct list *list) {
-        if (data == nullptr || list == nullptr)
+list_peek_front(void *out, struct list *list) {
+        if (out == nullptr || list == nullptr)
                 return 0;
 
-        memcpy(data, list->head->data, list->size_of_data);
+        memcpy(out, list->head->data, list->size_of_data);
         return 1;
 }
 
 int
-list_pop_front(void *data, struct list *list) {
-        if (data == nullptr || list == nullptr)
+list_pop_front(void *out, struct list *list) {
+        if (out == nullptr || list == nullptr)
                 return 0;
 
-        memcpy(data, list->head->data, list->size_of_data);
+        memcpy(out, list->head->data, list->size_of_data);
         struct list_node *tmp = list->head;
         list->head = list->head->next;
         --list->size;
@@ -144,5 +177,28 @@ list_push_front(void *data, struct list *list) {
                 list->tail = tmp;
 
         ++list->size;
+        return 1;
+}
+
+int
+list_remove_at(size_t index, void *out, struct list *list) {
+        if (list == nullptr)
+                return 0;
+
+        if (list->size <= index)
+                return 0;
+
+        struct list_node *current = list->head;
+
+        for (size_t i = 0; i < index; ++i, current = current->next) {
+                current = current->next;
+        }
+
+        if (out != nullptr)
+                memcpy(out, current->data, list->size_of_data);
+
+        struct list_node *next = current->next;
+        current->data = next->data;
+        current->next = next->next;
         return 1;
 }
