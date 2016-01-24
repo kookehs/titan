@@ -6,6 +6,8 @@ Project Titan is an accumulation of technologies and techniques I have learned p
   * Runtime Compiled C++
   * Hashmap
   * Axis-Aligned Bounding Box Collision
+  * Singly Linked Lists
+  * Quadtree
 
 ## Requirements
   * Windows
