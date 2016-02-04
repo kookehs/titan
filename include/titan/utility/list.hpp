@@ -21,6 +21,7 @@ struct list_info {
 struct list_node {
         void *data = nullptr;
         struct list_node *next = nullptr;
+        struct list_node *prev = nullptr;
 };
 
 struct list {
@@ -31,16 +32,17 @@ struct list {
         struct list_node *tail = nullptr;
 };
 
-int list_at(size_t, void *, struct list *);
-int list_copy(struct list *, struct list *);
-int list_create(struct list_info *, struct list **);
+int list_at(size_t, void *, struct list);
+int list_copy(struct list *, struct list);
+int list_create(struct list_info, struct list **);
 void list_destroy(struct list *);
-void list_enumerate(list_iterator, struct list *);
+void list_enumerate(list_iterator, struct list);
 int list_peek_back(void *, struct list *);
 int list_peek_front(void *, struct list *);
+int list_pop_back(void *, struct list *);
 int list_pop_front(void *, struct list *);
 int list_push_back(void *, struct list *);
 int list_push_front(void *, struct list *);
 int list_remove_at(size_t, void *, struct list *);
 
-#endif /* TITAN_UTILITY_LIST_HPP_ */
+#endif /* TITAN_UTILITY_LINKEDLIST_HPP_ */

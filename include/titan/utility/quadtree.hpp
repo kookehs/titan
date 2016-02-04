@@ -16,10 +16,9 @@
 struct quadtree {
         size_t depth = 0;
         struct list *items = nullptr;
-        size_t items_size = 0;
         struct list_info list_info;
         size_t max_depth = 5;
-        size_t max_items = 10;
+        size_t max_items = 1;
         struct quadtree *nodes = nullptr;
         struct rect_f rect;
         size_t size = 0;
@@ -27,8 +26,8 @@ struct quadtree {
 
 struct quadtree_info {
         size_t depth = 0;
-        struct list_info *list_info = nullptr;
-        struct rect_f *rect = nullptr;
+        struct list_info list_info;
+        struct rect_f rect;
 };
 
 struct quadtree_item {
@@ -36,11 +35,11 @@ struct quadtree_item {
         struct rect_f rect;
 };
 
-int quadtree_at(struct list *, struct rect_f *, struct quadtree *);
-void quadtree_clear(struct quadtree *);
-int quadtree_create(struct quadtree_info *, struct quadtree **);
-int quadtree_insert(struct quadtree_item *, struct quadtree *);
-int quadtree_quadrant(struct rect_f *, struct quadtree *);
+int quadtree_at(struct list *, struct rect_f, struct quadtree);
+int quadtree_clear(struct quadtree *);
+int quadtree_create(struct quadtree_info, struct quadtree **);
+int quadtree_insert(struct quadtree_item, struct quadtree *);
+int quadtree_quadrant(struct rect_f, struct quadtree);
 int quadtree_split(struct quadtree *);
 
 #endif /* TITAN_UTILITY_QUADTREE_HPP_ */

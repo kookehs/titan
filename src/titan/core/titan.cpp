@@ -79,7 +79,7 @@ game_init(struct game_state *state) {
         struct list_info info;
         info.size_of_data = sizeof(struct enemy);
         info.destroy = enemy_destroy;
-        list_create(&info, &state->enemys);
+        list_create(info, &state->enemys);
         char *enemy_texutre = "../data/textures/enemy_big.png";
         struct vector_2f a;
         a.x = 200;
@@ -89,7 +89,7 @@ game_init(struct game_state *state) {
         list_push_back(e, state->enemys);
 
         struct vector_2f b;
-        b.x = 400;
+        b.x = 600;
         b.y = 400;
         struct enemy *f = nullptr;
         enemy_create(enemy_texutre, b, &f);
@@ -184,9 +184,8 @@ game_process(struct game_state *state) {
 
 void
 game_resolve_collision(struct game_state *state) {
-        // TODO(bill): Handle collision in an more optimal manner
         struct list_info list_info;
-        list_info.destroy = enemy_destroy;
+        list_info.destroy = nullptr;
         list_info.size_of_data = sizeof(struct quadtree_item);
         sfVector2u window_size = sfRenderWindow_getSize(state->window);
         struct rect_f rect;
@@ -196,23 +195,23 @@ game_resolve_collision(struct game_state *state) {
         rect.height = window_size.y;
         struct quadtree_info info;
         info.depth = 0;
-        info.rect = &rect;
-        info.list_info = &list_info;
+        info.rect = rect;
+        info.list_info = list_info;
         struct quadtree *tree = nullptr;
-        quadtree_create(&info, &tree);
+        quadtree_create(info, &tree);
 
-        struct list_node *current = state->enemys->head;
+        struct list_node *enemies = state->enemys->head;
 
-        while (current != nullptr) {
-                struct enemy *enemy = (struct enemy *)current->data;
+        while (enemies != nullptr) {
+                struct enemy *enemy = (struct enemy *)enemies->data;
                 struct rect_f b = enemy->bounds;
                 b.x += enemy->dx * state->delta;
                 b.y += enemy->dy * state->delta;
                 struct quadtree_item item;
                 item.data = enemy;
                 item.rect = b;
-                quadtree_insert(&item, tree);
-                current = current->next;
+                quadtree_insert(item, tree);
+                enemies = enemies->next;
         }
 
         struct rect_f a = state->character.bounds;
@@ -220,17 +219,16 @@ game_resolve_collision(struct game_state *state) {
         a.y += state->character.dy * state->delta;
 
         struct list *nearby_enemies = nullptr;
-        list_create(&list_info, &nearby_enemies);
-        quadtree_at(nearby_enemies, &a, tree);
+        list_create(list_info, &nearby_enemies);
+        quadtree_at(nearby_enemies, a, *tree);
 
-        struct list_node *node = nearby_enemies->head;
+        struct list_node *nearby = nearby_enemies->head;
 
-        while (node != nullptr) {
+        while (nearby != nullptr) {
+                struct list_node *node = (struct list_node *)nearby->data;
                 struct quadtree_item *item = (struct quadtree_item *)node->data;
                 struct enemy *enemy = (struct enemy *)item->data;
                 struct rect_f b = enemy->bounds;
-                b.x += enemy->dx * state->delta;
-                b.y += enemy->dy * state->delta;
 
                 if (physics_aabb_intersects(&a, &b)) {
                         struct rect_f c = state->character.bounds;
@@ -246,43 +244,8 @@ game_resolve_collision(struct game_state *state) {
                         enemy->dy = 0;
                 }
 
-                node = node->next;
+                nearby = nearby->next;
         }
-
-        /*
-        float character_dx = state->character.dx;
-        float character_dy = state->character.dy;
-
-        struct rect_f a = state->character.bounds;
-        a.x += character_dx * state->delta;
-        a.y += character_dy * state->delta;
-
-        struct list_node *current = state->enemys->head;
-
-        while (current != nullptr) {
-                struct enemy *enemy = (struct enemy *)current->data;
-
-                struct rect_f b = enemy->bounds;
-                b.x += enemy->dx * state->delta;
-                b.y += enemy->dy * state->delta;
-
-                if (physics_aabb_intersects(&a, &b)) {
-                        struct rect_f c = state->character.bounds;
-                        enum side hit = physics_aabb_hit(&a, &b, &c);
-
-                        if (hit == bottom || hit == top) {
-                                state->character.dy *= -1;
-                        } else if (hit == left || hit == right) {
-                                state->character.dx *= -1;
-                        }
-
-                        enemy->dx = 0;
-                        enemy->dy = 0;
-                }
-
-                current = current->next;
-        }
-        */
 }
 
 inline void
