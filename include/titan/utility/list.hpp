@@ -43,6 +43,7 @@ int list_pop_back(void *, struct list *);
 int list_pop_front(void *, struct list *);
 int list_push_back(void *, struct list *);
 int list_push_front(void *, struct list *);
+int list_remove(struct list_node *, struct list *);
 int list_remove_at(size_t, void *, struct list *);
 
 #endif /* TITAN_UTILITY_LINKEDLIST_HPP_ */

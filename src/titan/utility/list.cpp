@@ -19,7 +19,8 @@ list_at(size_t index, void *out, struct list list) {
 
         struct list_node *current = list.head;
 
-        for (size_t i = 0; i < index; ++i, current = current->next) {}
+        for (size_t i = 0; i < index; ++i)
+                current = current->next;
 
         memcpy(out, current->data, list.size_of_data);
         return 1;
@@ -116,15 +117,7 @@ list_pop_back(void *out, struct list *list) {
 
         struct list_node *tmp = list->tail;
         list->tail = list->tail->prev;
-        --list->size;
-
-        if (list->destroy)
-                list->destroy(tmp->data);
-
-        free(tmp->data);
-        tmp->data = nullptr;
-        free(tmp);
-        tmp = nullptr;
+        list_remove(tmp, list);
         return 1;
 }
 
@@ -138,15 +131,7 @@ list_pop_front(void *out, struct list *list) {
 
         struct list_node *tmp = list->head;
         list->head = list->head->next;
-        --list->size;
-
-        if (list->destroy)
-                list->destroy(tmp->data);
-
-        free(tmp->data);
-        tmp->data = nullptr;
-        free(tmp);
-        tmp = nullptr;
+        list_remove(tmp, list);
         return 1;
 }
 
@@ -207,33 +192,49 @@ list_push_front(void *data, struct list *list) {
 }
 
 int
+list_remove(struct list_node *node, struct list *list) {
+        if (node == nullptr || list == nullptr)
+                return 0;
+
+
+        if (list->head == node && list->tail == node) {
+                list->head = nullptr;
+                list->tail = nullptr;
+        } else if (list->head == node) {
+                list->head = node->next;
+                list->head->prev = nullptr;
+        } else if (list->tail == node) {
+                list->tail = node->prev;
+                list->tail->next = nullptr;
+        } else {
+                node->next->prev = node->prev;
+                node->prev->next = node->next;
+        }
+
+        if (list->destroy)
+                list->destroy(node->data);
+
+        free(node->data);
+        node->data = nullptr;
+        free(node);
+        node = nullptr;
+        --list->size;
+        return 1;
+}
+
+int
 list_remove_at(size_t index, void *out, struct list *list) {
         if (list == nullptr || list->size <= index)
                 return 0;
 
-        if (list->size == 1) {
-                list_pop_front(out, list);
-                return 1;
-        } else if (list->size - 1 == index) {
-                list_pop_back(out, list);
-                return 1;
-        } else {
-                struct list_node *current = list->head;
-                for (size_t i = 0; i < index; ++i, current = current->next) {}
+        struct list_node *current = list->head;
 
-                if (out != nullptr)
-                        memcpy(out, current->data, list->size_of_data);
+        for (size_t i = 0; i < index; ++i)
+                current = current->next;
 
-                if (list->destroy)
-                        list->destroy(current->data);
+        if (out != nullptr)
+                memcpy(out, current->data, list->size_of_data);
 
-                current->prev->next = current->next;
-                current->next->prev = current->prev;
-                current->data = nullptr;
-                free(current);
-                current = nullptr;
-                --list->size;
-        }
-
+        list_remove(current, list);
         return 1;
 }
