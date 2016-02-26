@@ -12,14 +12,16 @@
 #include "titan/utility/hashmap.hpp"
 
 void
-print_pair(char *key, char *value) {
-        printf("%s : %s\n", key, value);
+print_pair(char *key, void *value) {
+        printf("%s : %s\n", key, (char *)value);
 }
 
 int
 main() {
-        struct map *map = map_create(8);
-        char buffer[255];
+        constexpr size_t size = sizeof(char) * 255;
+        struct hashmap *map;
+        hashmap_create(size, 8, &map);
+        char buffer[size];
 
         hashmap_insert("fruit", "apple", map);
         hashmap_insert("color", "red", map);
@@ -28,10 +30,13 @@ main() {
         hashmap_insert("color", "blue", map);
         hashmap_insert("os", "windows", map);
 
-        hashmap_at(map, "letter", sizeof(buffer), buffer);
+        printf("Hashmap:\n");
+        hashmap_enumerate(print_pair, map);
+
+        hashmap_at("letter", buffer, map);
         printf("letter : %s\n", buffer);
 
-        hashmap_enumerate(map, print_pair);
+        printf("Exists: %d", hashmap_exists("fruit", map));
 
         hashmap_destroy(map);
 

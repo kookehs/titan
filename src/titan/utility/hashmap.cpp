@@ -13,13 +13,13 @@
 #include <string.h>
 
 int
-hashmap_at(struct hashmap *map, char *key, void *out) {
+hashmap_at(char *key, void *out, struct hashmap *map) {
         if (map == nullptr || key == nullptr)
                 return 0;
 
         size_t index = string_hash(key) % map->size;
         struct bucket *bucket = &map->buckets[index];
-        struct pair *pair = pair_at(bucket, key);
+        struct pair *pair = pair_at(key, bucket);
 
         if (pair == nullptr)
                 return 0;
@@ -81,7 +81,7 @@ hashmap_destroy(struct hashmap *map) {
 }
 
 int
-hashmap_enumerate(struct hashmap *map, map_enum_fn *func) {
+hashmap_enumerate(map_enum_fn *func, struct hashmap *map) {
         if (map == nullptr || func == nullptr)
                 return 0;
 
@@ -99,13 +99,13 @@ hashmap_enumerate(struct hashmap *map, map_enum_fn *func) {
 }
 
 bool
-hashmap_exists(struct hashmap *map, char *key) {
+hashmap_exists(char *key, struct hashmap *map) {
         if (map == nullptr || key == nullptr)
                 return false;
 
         size_t index = string_hash(key) % map->size;
         struct bucket *bucket = &map->buckets[index];
-        struct pair *pair = pair_at(bucket, key);
+        struct pair *pair = pair_at(key, bucket);
 
         if (pair == nullptr)
                 return false;
@@ -121,10 +121,10 @@ hashmap_insert(char *key, void *value, struct hashmap *map) {
         size_t key_length = strlen(key) + 1;
         size_t index = string_hash(key) % map->size;
         struct bucket *bucket = &map->buckets[index];
-        struct pair *pair = pair_at(bucket, key);
+        struct pair *pair = pair_at(key, bucket);
 
         if (pair) {
-                pair->value = value;
+                memcpy(pair->value, value, map->size_of_data);
                 return 1;
         }
 
@@ -195,7 +195,7 @@ hashmap_size(struct hashmap *map) {
 }
 
 struct pair *
-pair_at(struct bucket *bucket, char *key) {
+pair_at(char *key, struct bucket *bucket) {
         if (bucket == nullptr || bucket->size == 0)
                 return nullptr;
 

@@ -48,18 +48,18 @@ game_init(struct game_state *state) {
 
         game_load_config("../data/common.cfg", map);
         char buffer[UCHAR_MAX] = {0};
-        hashmap_at(map, "WindowTitle", buffer);
+        hashmap_at("WindowTitle", buffer, map);
         char title[UCHAR_MAX] = {0};
         strncpy(title, buffer, sizeof(title));
-        hashmap_at(map, "WindowHeight", buffer);
+        hashmap_at("WindowHeight", buffer, map);
         uint32_t height = strtol(buffer, nullptr, 10);
-        hashmap_at(map, "WindowWidth", buffer);
+        hashmap_at("WindowWidth", buffer, map);
         uint32_t width = strtol(buffer, nullptr, 10);
-        hashmap_at(map, "BitDepth", buffer);
+        hashmap_at("BitDepth", buffer, map);
         uint32_t bit_depth = strtol(buffer, nullptr, 10);
-        hashmap_at(map, "FrameRate", buffer);
+        hashmap_at("FrameRate", buffer, map);
         uint32_t frame_rate = strtol(buffer, nullptr, 10);
-        hashmap_at(map, "VSync", buffer);
+        hashmap_at("VSync", buffer, map);
         bool vsync = strtol(buffer, nullptr, 10);
         hashmap_destroy(map);
 

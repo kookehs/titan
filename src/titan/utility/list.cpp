@@ -116,7 +116,6 @@ list_pop_back(void *out, struct list *list) {
                 memcpy(out, list->tail->data, list->size_of_data);
 
         struct list_node *tmp = list->tail;
-        list->tail = list->tail->prev;
         list_remove(tmp, list);
         return 1;
 }
@@ -130,7 +129,6 @@ list_pop_front(void *out, struct list *list) {
                 memcpy(out, list->head->data, list->size_of_data);
 
         struct list_node *tmp = list->head;
-        list->head = list->head->next;
         list_remove(tmp, list);
         return 1;
 }
@@ -195,7 +193,6 @@ int
 list_remove(struct list_node *node, struct list *list) {
         if (node == nullptr || list == nullptr)
                 return 0;
-
 
         if (list->head == node && list->tail == node) {
                 list->head = nullptr;

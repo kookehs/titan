@@ -28,14 +28,14 @@ struct pair {
         void *value;
 };
 
-int hashmap_at(struct hashmap *, char *, void *);
+int hashmap_at(char *, void *, struct hashmap *);
 int hashmap_create(size_t, size_t, struct hashmap **);
 void hashmap_destroy(struct hashmap *);
-int hashmap_enumerate(struct hashmap *, map_enum_fn *);
-bool hashmap_exists(struct hashmap *, char *);
+int hashmap_enumerate(map_enum_fn *, struct hashmap *);
+bool hashmap_exists(char *, struct hashmap *);
 int hashmap_insert(char *, void *, struct hashmap *);
 size_t hashmap_size(struct hashmap *);
-struct pair *pair_at(struct bucket *, char *);
+struct pair *pair_at(char *, struct bucket *);
 size_t string_hash(char *);
 
 #endif /* TITAN_UTILITY_HASHMAP_HPP_ */
